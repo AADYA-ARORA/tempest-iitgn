@@ -1,368 +1,183 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>TEMPEST 🔋</title>
-
-  <!-- xlsx -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-
-  <!-- Fonts + basic reset -->
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap" rel="stylesheet">
-
-  <style>
-    :root{
-      --bg: #f3f6fb;
-      --card: #ffffff;
-      --accent: #0066cc;
-      --muted: #667085;
-      --glass: rgba(255,255,255,0.65);
-    }
-    *{box-sizing:border-box}
-    body{
-      margin:0;
-      font-family: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
-      background: linear-gradient(180deg, #eef6ff 0%, var(--bg) 100%);
-      color:#123;
-      -webkit-font-smoothing:antialiased;
-      -moz-osx-font-smoothing:grayscale;
-      padding:28px;
-      display:flex;
-      justify-content:center;
-    }
-
-    .wrap{width:100%; max-width:1000px;}
-
-    header{
-      display:flex;
-      align-items:center;
-      gap:18px;
-      margin-bottom:18px;
-    }
-    .logo{
-      width:68px; height:68px; border-radius:14px;
-      background:linear-gradient(135deg,#0ea5a0,#06b6d4);
-      display:flex; align-items:center; justify-content:center; color:white; font-weight:800; font-size:22px;
-      box-shadow: 0 8px 30px rgba(6, 78, 59, 0.08);
-    }
-    h1{ margin:0; font-size:22px; }
-    p.lead{ margin:0; color:var(--muted); font-size:14px }
-
-    .grid{
-      display:grid;
-      grid-template-columns: 1fr 380px;
-      gap:18px;
-      align-items:start;
-    }
-
-    /* Responsive */
-    @media (max-width:900px){
-      .grid{ grid-template-columns: 1fr; }
-    }
-
-    .card{
-      background:var(--card);
-      border-radius:14px;
-      padding:18px;
-      box-shadow: 0 10px 30px rgba(15, 23, 42, 0.06);
-    }
-
-    label{ font-weight:600; display:block; margin-top:12px; color:#0f1724}
-    input[type="number"], select, button {
-      width:100%; padding:10px 12px; border-radius:10px; border:1px solid #e6eef8; margin-top:8px; font-size:15px;
-      background:linear-gradient(180deg, white, #fbfdff);
-    }
-
-    select[multiple] { height:120px; }
-
-    .controls{ display:flex; gap:12px; margin-top:14px; }
-    .controls button { flex:1; cursor:pointer; border:none; font-weight:700; color:white; background:linear-gradient(90deg,#0066cc,#2b8cff); box-shadow:0 8px 24px rgba(43,140,255,0.12); padding:12px 14px; border-radius:12px; }
-    .controls button.secondary { background:#e6eef8; color:#123; box-shadow:none; font-weight:600; }
-
-    .status{
-      margin-top:12px; display:flex; gap:12px; align-items:center; color:var(--muted);
-      font-size:13px;
-    }
-
-    /* spinner */
-    .spinner {
-      width:18px; height:18px; border-radius:50%;
-      border:3px solid rgba(0,0,0,0.08);
-      border-top-color: #0ea5a0;
-      animation:spin 1s linear infinite;
-    }
-    @keyframes spin { to { transform:rotate(360deg) } }
-
-    .result-box{
-      margin-top:14px; padding:18px; border-radius:12px; text-align:center; color:white; font-weight:800; font-size:18px;
-      background: linear-gradient(90deg,#00c853,#00e676);
-      box-shadow: 0 10px 30px rgba(0,200,110,0.12);
-    }
-
-    .small { font-size:12px; color:var(--muted); margin-top:8px; }
-    .progress-line{ margin-top:10px; font-size:13px; color:#0b2b3a; }
-
-    footer{ margin-top:18px; text-align:center; color:var(--muted); font-size:13px; }
-    .right-col .meta{ font-size:13px; color:var(--muted) }
-
-    /* file list area styles */
-    .file-summary { margin-top:12px; font-size:13px; color:#0b2b3a; }
-    .file-summary .bad { color:#c33; }
-  </style>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>TEMPEST — Optimal Battery Finder</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+<script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+<style>
+  body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    margin: 0;
+    background-color: #f5f7fa;
+  }
+  header {
+    background-color: #1e3a8a;
+    color: white;
+    padding: 1rem 2rem;
+    text-align: center;
+    font-size: 1.8rem;
+    font-weight: bold;
+    letter-spacing: 1px;
+  }
+  main {
+    max-width: 900px;
+    margin: 2rem auto;
+    background: white;
+    padding: 2rem;
+    border-radius: 10px;
+    box-shadow: 0px 4px 20px rgba(0,0,0,0.1);
+  }
+  label {
+    font-weight: 600;
+    display: block;
+    margin-top: 1rem;
+  }
+  input[type="number"] {
+    width: 100%;
+    padding: 0.6rem;
+    margin-top: 0.3rem;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    font-size: 1rem;
+  }
+  .checkbox-group {
+    display: flex;
+    gap: 1rem;
+    margin-top: 0.5rem;
+  }
+  .checkbox-group label {
+    font-weight: normal;
+  }
+  button {
+    padding: 0.8rem 1.5rem;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    margin-top: 1.5rem;
+    font-size: 1rem;
+    color: white;
+    background-color: #2563eb;
+    transition: background-color 0.2s ease-in-out;
+  }
+  button:hover {
+    background-color: #1d4ed8;
+  }
+  #result {
+    margin-top: 1.5rem;
+    padding: 1rem;
+    border-radius: 8px;
+    font-size: 1.2rem;
+    font-weight: bold;
+    text-align: center;
+    color: white;
+    background-color: #22c55e;
+  }
+  #log {
+    font-size: 0.9rem;
+    margin-top: 1rem;
+    color: #4b5563;
+    white-space: pre-wrap;
+    max-height: 200px;
+    overflow-y: auto;
+    background-color: #f3f4f6;
+    padding: 0.8rem;
+    border-radius: 8px;
+  }
+</style>
 </head>
 <body>
-  <div class="wrap">
-    <header>
-      <div class="logo">T</div>
-      <div>
-        <h1>TEMPEST — Optimal Battery Finder</h1>
-        <p class="lead">Client-side analysis (GitHub Pages). Picks the chemistry with the lowest average time surface-temp &gt; ambient.</p>
-      </div>
-    </header>
+<header>
+  🚀 TEMPEST — Optimal Battery Finder
+</header>
+<main>
+  <label>🌡 Ambient Temperature (°C)</label>
+  <input type="number" id="ambientTemp" placeholder="Enter ambient temperature" />
 
-    <div class="grid">
-      <!-- left (controls) -->
-      <div class="card">
-        <label>🌡 Ambient Temperature (°C)</label>
-        <input id="ambient" type="number" step="0.5" min="-20" max="80" value="25">
-
-        <label>🔋 Select battery chemistries (Ctrl/Cmd+click for multi)</label>
-        <select id="chems" multiple>
-          <option value="LFP" selected>LFP</option>
-          <option value="NMC" selected>NMC</option>
-          <option value="NCA" selected>NCA</option>
-        </select>
-
-        <div class="controls">
-          <button id="runBtn">🚀 Run Analysis</button>
-          <button id="resetBtn" class="secondary">Reset</button>
-        </div>
-
-        <div id="statusArea" class="status">
-          <div id="spinner" style="display:none" class="spinner"></div>
-          <div id="statusText">Idle</div>
-        </div>
-
-        <div id="progress" class="progress-line"></div>
-        <div id="fileSummary" class="file-summary small"></div>
-      </div>
-
-      <!-- right (result + notes) -->
-      <div class="card right-col">
-        <div class="meta">Selected dataset folder will be chosen automatically based on ambient temperature:</div>
-        <ul class="small">
-          <li><strong>&lt; 20°C</strong> → <code>data/5deg/</code></li>
-          <li><strong>20–30°C</strong> → <code>data/25deg/</code></li>
-          <li><strong>&gt; 30°C</strong> → <code>data/35deg/</code></li>
-        </ul>
-
-        <div id="resultContainer" style="margin-top:14px;"></div>
-
-        <div class="small" style="margin-top:12px;">
-          Make sure the `data/` folder (5deg/25deg/35deg + chem folders) and filenames in <code>filesList</code> match exactly.
-        </div>
-      </div>
-    </div>
-
-    <footer>Hosted on GitHub Pages — all computation runs in the browser. Do not store private data here unless repo is private.</footer>
+  <label>🔋 Select Battery Chemistries</label>
+  <div class="checkbox-group">
+    <label><input type="checkbox" value="LFP" /> LFP</label>
+    <label><input type="checkbox" value="NMC" /> NMC</label>
+    <label><input type="checkbox" value="NCA" /> NCA</label>
   </div>
 
+  <button onclick="runAnalysis()">Run Analysis</button>
+  <button onclick="resetForm()" style="background-color:#6b7280; margin-left: 1rem;">Reset</button>
+
+  <div id="result" style="display:none;"></div>
+  <div id="log"></div>
+</main>
+
 <script>
-/* -------------------------
-   Configuration: filenames
-   Update this object if you add/remove files.
-   Structure: filesList[folder][chem] -> array of filenames
-   ------------------------- */
 const filesList = {
   "5deg": {
-    "LFP": ["LFP_k1_0_05C_05degC.xlsx","LFP_k1_10C_05degC.xlsx","LFP_k1_15C_05degC.xlsx","LFP_k1_1C_05degC.xlsx","LFP_k1_20C_05degC.xlsx","LFP_k1_2C_05degC.xlsx","LFP_k1_3C_05degC.xlsx","LFP_k1_5C_05degC.xlsx","LFP_k2_0_05C_05degC.xlsx","LFP_k2_10C_05degC.xlsx","LFP_k2_15C_05degC.xlsx","LFP_k2_1C_05degC.xlsx","LFP_k2_20C_05degC.xlsx","LFP_k2_2C_05degC.xlsx","LFP_k2_3C_05degC.xlsx","LFP_k2_5C_05degC.xlsx","LFP_k3_0_05C_05degC.xlsx","LFP_k3_10C_05degC.xlsx","LFP_k3_15C_05degC.xlsx","LFP_k3_1C_05degC.xlsx","LFP_k3_20C_05degC.xlsx","LFP_k3_2C_05degC.xlsx","LFP_k3_3C_05degC.xlsx","LFP_k3_5C_05degC.xlsx","LFP_k4_0_05C_05degC.xlsx","LFP_k4_10C_05degC.xlsx","LFP_k4_15C_05degC.xlsx","LFP_k4_1C_05degC.xlsx","LFP_k4_20C_05degC.xlsx","LFP_k4_2C_05degC.xlsx","LFP_k4_3C_05degC.xlsx","LFP_k4_5C_05degC.xlsx","LFP_k5_0_05C_05degC.xlsx","LFP_k5_10C_05degC.xlsx","LFP_k5_15C_05degC.xlsx","LFP_k5_1C_05degC.xlsx","LFP_k5_20C_05degC.xlsx","LFP_k5_2C_05degC.xlsx","LFP_k5_3C_05degC.xlsx","LFP_k5_5C_05degC.xlsx","LFP_k6_0_05C_05degC.xlsx","LFP_k6_10C_05degC.xlsx","LFP_k6_15C_05degC.xlsx","LFP_k6_1C_05degC.xlsx","LFP_k6_20C_05degC.xlsx","LFP_k6_2C_05degC.xlsx","LFP_k6_3C_05degC.xlsx","LFP_k6_5C_05degC.xlsx"],
-    "NMC": ["NMC_k1_0_05C_05degC.xlsx","NMC_k1_1C_05degC.xlsx","NMC_k1_2C_05degC.xlsx","NMC_k1_3C_05degC.xlsx","NMC_k1_5C_05degC.xlsx","NMC_k2_0_05C_05degC.xlsx","NMC_k2_1C_05degC.xlsx","NMC_k2_2C_05degC.xlsx","NMC_k2_3C_05degC.xlsx","NMC_k2_5C_05degC.xlsx","NMC_k3_0_05C_05degC.xlsx","NMC_k3_1C_05degC.xlsx","NMC_k3_2C_05degC.xlsx","NMC_k3_3C_05degC.xlsx","NMC_k3_5C_05degC.xlsx","NMC_k4_0_05C_05degC.xlsx","NMC_k4_1C_05degC.xlsx","NMC_k4_2C_05degC.xlsx","NMC_k4_3C_05degC.xlsx","NMC_k4_5C_05degC.xlsx","NMC_k5_0_05C_05degC.xlsx","NMC_k5_1C_05degC.xlsx","NMC_k5_2C_05degC.xlsx","NMC_k5_3C_05degC.xlsx","NMC_k5_5C_05degC.xlsx","NMC_k6_0_05C_05degC.xlsx","NMC_k6_1C_05degC.xlsx","NMC_k6_2C_05degC.xlsx","NMC_k6_3C_05degC.xlsx","NMC_k6_5C_05degC.xlsx"],
-    "NCA": ["NCA_k1_0_05C_05degC.xlsx","NCA_k1_1C_05degC.xlsx","NCA_k1_2C_05degC.xlsx","NCA_k1_3C_05degC.xlsx","NCA_k1_5C_05degC.xlsx","NCA_k2_0_05C_05degC.xlsx","NCA_k2_1C_05degC.xlsx","NCA_k2_2C_05degC.xlsx","NCA_k2_3C_05degC.xlsx","NCA_k2_5C_05degC.xlsx","NCA_k3_0_05C_05degC.xlsx","NCA_k3_1C_05degC.xlsx","NCA_k3_2C_05degC.xlsx","NCA_k3_3C_05degC.xlsx","NCA_k3_5C_05degC.xlsx","NCA_k4_0_05C_05degC.xlsx","NCA_k4_1C_05degC.xlsx","NCA_k4_2C_05degC.xlsx","NCA_k4_3C_05degC.xlsx","NCA_k4_5C_05degC.xlsx","NCA_k5_0_05C_05degC.xlsx","NCA_k5_1C_05degC.xlsx","NCA_k5_2C_05degC.xlsx","NCA_k5_3C_05degC.xlsx","NCA_k5_5C_05degC.xlsx","NCA_k6_0_05C_05degC.xlsx","NCA_k6_1C_05degC.xlsx","NCA_k6_2C_05degC.xlsx","NCA_k6_3C_05degC.xlsx","NCA_k6_5C_05degC.xlsx"]
+    "LFP": ["LFP_k1_0_05C_05degC.xlsx", "LFP_k1_10C_05degC.xlsx", "LFP_k1_15C_05degC.xlsx", "LFP_k1_1C_05degC.xlsx", "LFP_k1_20C_05degC.xlsx", "LFP_k1_2C_05degC.xlsx", "LFP_k1_3C_05degC.xlsx", "LFP_k1_5C_05degC.xlsx", "LFP_k2_0_05C_05degC.xlsx", "LFP_k2_10C_05degC.xlsx", "LFP_k2_15C_05degC.xlsx", "LFP_k2_1C_05degC.xlsx", "LFP_k2_20C_05degC.xlsx", "LFP_k2_2C_05degC.xlsx", "LFP_k2_3C_05degC.xlsx", "LFP_k2_5C_05degC.xlsx", "LFP_k3_0_05C_05degC.xlsx", "LFP_k3_10C_05degC.xlsx", "LFP_k3_15C_05degC.xlsx", "LFP_k3_1C_05degC.xlsx", "LFP_k3_20C_05degC.xlsx", "LFP_k3_2C_05degC.xlsx", "LFP_k3_3C_05degC.xlsx", "LFP_k3_5C_05degC.xlsx", "LFP_k4_0_05C_05degC.xlsx", "LFP_k4_10C_05degC.xlsx", "LFP_k4_15C_05degC.xlsx", "LFP_k4_1C_05degC.xlsx", "LFP_k4_20C_05degC.xlsx", "LFP_k4_2C_05degC.xlsx", "LFP_k4_3C_05degC.xlsx", "LFP_k4_5C_05degC.xlsx", "LFP_k5_0_05C_05degC.xlsx", "LFP_k5_10C_05degC.xlsx", "LFP_k5_15C_05degC.xlsx", "LFP_k5_1C_05degC.xlsx", "LFP_k5_20C_05degC.xlsx", "LFP_k5_2C_05degC.xlsx", "LFP_k5_3C_05degC.xlsx", "LFP_k5_5C_05degC.xlsx", "LFP_k6_0_05C_05degC.xlsx", "LFP_k6_10C_05degC.xlsx", "LFP_k6_15C_05degC.xlsx", "LFP_k6_1C_05degC.xlsx", "LFP_k6_20C_05degC.xlsx", "LFP_k6_2C_05degC.xlsx", "LFP_k6_3C_05degC.xlsx", "LFP_k6_5C_05degC.xlsx"],
+    "NMC": ["NMC_k1_0_05C_05degC.xlsx", "NMC_k1_1C_05degC.xlsx", "NMC_k1_2C_05degC.xlsx", "NMC_k1_3C_05degC.xlsx", "NMC_k1_5C_05degC.xlsx", "NMC_k2_0_05C_05degC.xlsx", "NMC_k2_1C_05degC.xlsx", "NMC_k2_2C_05degC.xlsx", "NMC_k2_3C_05degC.xlsx", "NMC_k2_5C_05degC.xlsx", "NMC_k3_0_05C_05degC.xlsx", "NMC_k3_1C_05degC.xlsx", "NMC_k3_2C_05degC.xlsx", "NMC_k3_3C_05degC.xlsx", "NMC_k3_5C_05degC.xlsx", "NMC_k4_0_05C_05degC.xlsx", "NMC_k4_1C_05degC.xlsx", "NMC_k4_2C_05degC.xlsx", "NMC_k4_3C_05degC.xlsx", "NMC_k4_5C_05degC.xlsx", "NMC_k5_0_05C_05degC.xlsx", "NMC_k5_1C_05degC.xlsx", "NMC_k5_2C_05degC.xlsx", "NMC_k5_3C_05degC.xlsx", "NMC_k5_5C_05degC.xlsx", "NMC_k6_0_05C_05degC.xlsx", "NMC_k6_1C_05degC.xlsx", "NMC_k6_2C_05degC.xlsx", "NMC_k6_3C_05degC.xlsx", "NMC_k6_5C_05degC.xlsx"],
+    "NCA": ["NCA_k1_0_05C_05degC.xlsx", "NCA_k1_1C_05degC.xlsx", "NCA_k1_2C_05degC.xlsx", "NCA_k1_3C_05degC.xlsx", "NCA_k1_5C_05degC.xlsx", "NCA_k2_0_05C_05degC.xlsx", "NCA_k2_1C_05degC.xlsx", "NCA_k2_2C_05degC.xlsx", "NCA_k2_3C_05degC.xlsx", "NCA_k2_5C_05degC.xlsx", "NCA_k3_0_05C_05degC.xlsx", "NCA_k3_1C_05degC.xlsx", "NCA_k3_2C_05degC.xlsx", "NCA_k3_3C_05degC.xlsx", "NCA_k3_5C_05degC.xlsx", "NCA_k4_0_05C_05degC.xlsx", "NCA_k4_1C_05degC.xlsx", "NCA_k4_2C_05degC.xlsx", "NCA_k4_3C_05degC.xlsx", "NCA_k4_5C_05degC.xlsx", "NCA_k5_0_05C_05degC.xlsx", "NCA_k5_1C_05degC.xlsx", "NCA_k5_2C_05degC.xlsx", "NCA_k5_3C_05degC.xlsx", "NCA_k5_5C_05degC.xlsx", "NCA_k6_0_05C_05degC.xlsx", "NCA_k6_1C_05degC.xlsx", "NCA_k6_2C_05degC.xlsx", "NCA_k6_3C_05degC.xlsx", "NCA_k6_5C_05degC.xlsx"]
   },
   "25deg": {
-    "LFP": ["LFP_k1_0_05C_25degC.xlsx","LFP_k1_10C_25degC.xlsx","LFP_k1_15C_25degC.xlsx","LFP_k1_1C_25degC.xlsx","LFP_k1_20C_25degC.xlsx","LFP_k1_2C_25degC.xlsx","LFP_k1_3C_25degC.xlsx","LFP_k1_5C_25degC.xlsx","LFP_k2_0_05C_25degC.xlsx","LFP_k2_10C_25degC.xlsx","LFP_k2_15C_25degC.xlsx","LFP_k2_1C_25degC.xlsx","LFP_k2_20C_25degC.xlsx","LFP_k2_2C_25degC.xlsx","LFP_k2_3C_25degC.xlsx","LFP_k2_5C_25degC.xlsx","LFP_k3_0_05C_25degC.xlsx","LFP_k3_10C_25degC.xlsx","LFP_k3_15C_25degC.xlsx","LFP_k3_1C_25degC.xlsx","LFP_k3_20C_25degC.xlsx","LFP_k3_2C_25degC.xlsx","LFP_k3_3C_25degC.xlsx","LFP_k3_5C_25degC.xlsx","LFP_k4_0_05C_25degC.xlsx","LFP_k4_10C_25degC.xlsx","LFP_k4_15C_25degC.xlsx","LFP_k4_1C_25degC.xlsx","LFP_k4_20C_25degC.xlsx","LFP_k4_2C_25degC.xlsx","LFP_k4_3C_25degC.xlsx","LFP_k4_5C_25degC.xlsx","LFP_k5_0_05C_25degC.xlsx","LFP_k5_10C_25degC.xlsx","LFP_k5_15C_25degC.xlsx","LFP_k5_1C_25degC.xlsx","LFP_k5_20C_25degC.xlsx","LFP_k5_2C_25degC.xlsx","LFP_k5_3C_25degC.xlsx","LFP_k5_5C_25degC.xlsx","LFP_k6_0_05C_25degC.xlsx","LFP_k6_10C_25degC.xlsx","LFP_k6_15C_25degC.xlsx","LFP_k6_1C_25degC.xlsx","LFP_k6_20C_25degC.xlsx","LFP_k6_2C_25degC.xlsx","LFP_k6_3C_25degC.xlsx","LFP_k6_5C_25degC.xlsx"],
-    "NMC": ["NMC_k1_0_05C_25degC.xlsx","NMC_k1_1C_25degC.xlsx","NMC_k1_2C_25degC.xlsx","NMC_k1_3C_25degC.xlsx","NMC_k1_5C_25degC.xlsx","NMC_k2_0_05C_25degC.xlsx","NMC_k2_1C_25degC.xlsx","NMC_k2_2C_25degC.xlsx","NMC_k2_3C_25degC.xlsx","NMC_k2_5C_25degC.xlsx","NMC_k3_0_05C_25degC.xlsx","NMC_k3_1C_25degC.xlsx","NMC_k3_2C_25degC.xlsx","NMC_k3_3C_25degC.xlsx","NMC_k3_5C_25degC.xlsx","NMC_k4_0_05C_25degC.xlsx","NMC_k4_1C_25degC.xlsx","NMC_k4_2C_25degC.xlsx","NMC_k4_3C_25degC.xlsx","NMC_k4_5C_25degC.xlsx","NMC_k5_0_05C_25degC.xlsx","NMC_k5_1C_25degC.xlsx","NMC_k5_2C_25degC.xlsx","NMC_k5_3C_25degC.xlsx","NMC_k5_5C_25degC.xlsx","NMC_k6_0_05C_25degC.xlsx","NMC_k6_1C_25degC.xlsx","NMC_k6_2C_25degC.xlsx","NMC_k6_3C_25degC.xlsx","NMC_k6_5C_25degC.xlsx"],
-    "NCA": ["NCA_k1_0_05C_25degC.xlsx","NCA_k1_1C_25degC.xlsx","NCA_k1_2C_25degC.xlsx","NCA_k1_3C_25degC.xlsx","NCA_k1_5C_25degC.xlsx","NCA_k2_0_05C_25degC.xlsx","NCA_k2_1C_25degC.xlsx","NCA_k2_2C_25degC.xlsx","NCA_k2_3C_25degC.xlsx","NCA_k2_5C_25degC.xlsx","NCA_k3_0_05C_25degC.xlsx","NCA_k3_1C_25degC.xlsx","NCA_k3_2C_25degC.xlsx","NCA_k3_3C_25degC.xlsx","NCA_k3_5C_25degC.xlsx","NCA_k4_0_05C_25degC.xlsx","NCA_k4_1C_25degC.xlsx","NCA_k4_2C_25degC.xlsx","NCA_k4_3C_25degC.xlsx","NCA_k4_5C_25degC.xlsx","NCA_k5_0_05C_25degC.xlsx","NCA_k5_1C_25degC.xlsx","NCA_k5_2C_25degC.xlsx","NCA_k5_3C_25degC.xlsx","NCA_k5_5C_25degC.xlsx","NCA_k6_0_05C_25degC.xlsx","NCA_k6_1C_25degC.xlsx","NCA_k6_2C_25degC.xlsx","NCA_k6_3C_25degC.xlsx","NCA_k6_5C_25degC.xlsx"]
+    "LFP": ["LFP_k1_0_05C_25degC.xlsx", "LFP_k1_10C_25degC.xlsx", "LFP_k1_15C_25degC.xlsx", "LFP_k1_1C_25degC.xlsx", "LFP_k1_20C_25degC.xlsx", "LFP_k1_2C_25degC.xlsx", "LFP_k1_3C_25degC.xlsx", "LFP_k1_5C_25degC.xlsx", "LFP_k2_0_05C_25degC.xlsx", "LFP_k2_10C_25degC.xlsx", "LFP_k2_15C_25degC.xlsx", "LFP_k2_1C_25degC.xlsx", "LFP_k2_20C_25degC.xlsx", "LFP_k2_2C_25degC.xlsx", "LFP_k2_3C_25degC.xlsx", "LFP_k2_5C_25degC.xlsx", "LFP_k3_0_05C_25degC.xlsx", "LFP_k3_10C_25degC.xlsx", "LFP_k3_15C_25degC.xlsx", "LFP_k3_1C_25degC.xlsx", "LFP_k3_20C_25degC.xlsx", "LFP_k3_2C_25degC.xlsx", "LFP_k3_3C_25degC.xlsx", "LFP_k3_5C_25degC.xlsx", "LFP_k4_0_05C_25degC.xlsx", "LFP_k4_10C_25degC.xlsx", "LFP_k4_15C_25degC.xlsx", "LFP_k4_1C_25degC.xlsx", "LFP_k4_20C_25degC.xlsx", "LFP_k4_2C_25degC.xlsx", "LFP_k4_3C_25degC.xlsx", "LFP_k4_5C_25degC.xlsx", "LFP_k5_0_05C_25degC.xlsx", "LFP_k5_10C_25degC.xlsx", "LFP_k5_15C_25degC.xlsx", "LFP_k5_1C_25degC.xlsx", "LFP_k5_20C_25degC.xlsx", "LFP_k5_2C_25degC.xlsx", "LFP_k5_3C_25degC.xlsx", "LFP_k5_5C_25degC.xlsx", "LFP_k6_0_05C_25degC.xlsx", "LFP_k6_10C_25degC.xlsx", "LFP_k6_15C_25degC.xlsx", "LFP_k6_1C_25degC.xlsx", "LFP_k6_20C_25degC.xlsx", "LFP_k6_2C_25degC.xlsx", "LFP_k6_3C_25degC.xlsx", "LFP_k6_5C_25degC.xlsx"],
+    "NMC": ["NMC_k1_0_05C_25degC.xlsx", "NMC_k1_1C_25degC.xlsx", "NMC_k1_2C_25degC.xlsx", "NMC_k1_3C_25degC.xlsx", "NMC_k1_5C_25degC.xlsx", "NMC_k2_0_05C_25degC.xlsx", "NMC_k2_1C_25degC.xlsx", "NMC_k2_2C_25degC.xlsx", "NMC_k2_3C_25degC.xlsx", "NMC_k2_5C_25degC.xlsx", "NMC_k3_0_05C_25degC.xlsx", "NMC_k3_1C_25degC.xlsx", "NMC_k3_2C_25degC.xlsx", "NMC_k3_3C_25degC.xlsx", "NMC_k3_5C_25degC.xlsx", "NMC_k4_0_05C_25degC.xlsx", "NMC_k4_1C_25degC.xlsx", "NMC_k4_2C_25degC.xlsx", "NMC_k4_3C_25degC.xlsx", "NMC_k4_5C_25degC.xlsx", "NMC_k5_0_05C_25degC.xlsx", "NMC_k5_1C_25degC.xlsx", "NMC_k5_2C_25degC.xlsx", "NMC_k5_3C_25degC.xlsx", "NMC_k5_5C_25degC.xlsx", "NMC_k6_0_05C_25degC.xlsx", "NMC_k6_1C_25degC.xlsx", "NMC_k6_2C_25degC.xlsx", "NMC_k6_3C_25degC.xlsx", "NMC_k6_5C_25degC.xlsx"],
+    "NCA": ["NCA_k1_0_05C_25degC.xlsx", "NCA_k1_1C_25degC.xlsx", "NCA_k1_2C_25degC.xlsx", "NCA_k1_3C_25degC.xlsx", "NCA_k1_5C_25degC.xlsx", "NCA_k2_0_05C_25degC.xlsx", "NCA_k2_1C_25degC.xlsx", "NCA_k2_2C_25degC.xlsx", "NCA_k2_3C_25degC.xlsx", "NCA_k2_5C_25degC.xlsx", "NCA_k3_0_05C_25degC.xlsx", "NCA_k3_1C_25degC.xlsx", "NCA_k3_2C_25degC.xlsx", "NCA_k3_3C_25degC.xlsx", "NCA_k3_5C_25degC.xlsx", "NCA_k4_0_05C_25degC.xlsx", "NCA_k4_1C_25degC.xlsx", "NCA_k4_2C_25degC.xlsx", "NCA_k4_3C_25degC.xlsx", "NCA_k4_5C_25degC.xlsx", "NCA_k5_0_05C_25degC.xlsx", "NCA_k5_1C_25degC.xlsx", "NCA_k5_2C_25degC.xlsx", "NCA_k5_3C_25degC.xlsx", "NCA_k5_5C_25degC.xlsx", "NCA_k6_0_05C_25degC.xlsx", "NCA_k6_1C_25degC.xlsx", "NCA_k6_2C_25degC.xlsx", "NCA_k6_3C_25degC.xlsx", "NCA_k6_5C_25degC.xlsx"]
   },
   "35deg": {
-    "LFP": ["LFP_k1_0_05C_35degC.xlsx","LFP_k1_10C_35degC.xlsx","LFP_k1_15C_35degC.xlsx","LFP_k1_1C_35degC.xlsx","LFP_k1_20C_35degC.xlsx","LFP_k1_2C_35degC.xlsx","LFP_k1_3C_35degC.xlsx","LFP_k1_5C_35degC.xlsx","LFP_k2_0_05C_35degC.xlsx","LFP_k2_10C_35degC.xlsx","LFP_k2_15C_35degC.xlsx","LFP_k2_1C_35degC.xlsx","LFP_k2_20C_35degC.xlsx","LFP_k2_2C_35degC.xlsx","LFP_k2_3C_35degC.xlsx","LFP_k2_5C_35degC.xlsx","LFP_k3_0_05C_35degC.xlsx","LFP_k3_10C_35degC.xlsx","LFP_k3_15C_35degC.xlsx","LFP_k3_1C_35degC.xlsx","LFP_k3_20C_35degC.xlsx","LFP_k3_2C_35degC.xlsx","LFP_k3_3C_35degC.xlsx","LFP_k3_5C_35degC.xlsx","LFP_k4_0_05C_35degC.xlsx","LFP_k4_10C_35degC.xlsx","LFP_k4_15C_35degC.xlsx","LFP_k4_1C_35degC.xlsx","LFP_k4_20C_35degC.xlsx","LFP_k4_2C_35degC.xlsx","LFP_k4_3C_35degC.xlsx","LFP_k4_5C_35degC.xlsx","LFP_k5_0_05C_35degC.xlsx","LFP_k5_10C_35degC.xlsx","LFP_k5_15C_35degC.xlsx","LFP_k5_1C_35degC.xlsx","LFP_k5_20C_35degC.xlsx","LFP_k5_2C_35degC.xlsx","LFP_k5_3C_35degC.xlsx","LFP_k5_5C_35degC.xlsx","LFP_k6_0_05C_35degC.xlsx","LFP_k6_10C_35degC.xlsx","LFP_k6_15C_35degC.xlsx","LFP_k6_1C_35degC.xlsx","LFP_k6_20C_35degC.xlsx","LFP_k6_2C_35degC.xlsx","LFP_k6_3C_35degC.xlsx","LFP_k6_5C_35degC.xlsx"],
-    "NMC": ["NMC_k1_0_05C_35degC.xlsx","NMC_k1_1C_35degC.xlsx","NMC_k1_2C_35degC.xlsx","NMC_k1_3C_35degC.xlsx","NMC_k1_5C_35degC.xlsx","NMC_k2_0_05C_35degC.xlsx","NMC_k2_1C_35degC.xlsx","NMC_k2_2C_35degC.xlsx","NMC_k2_3C_35degC.xlsx","NMC_k2_5C_35degC.xlsx","NMC_k3_0_05C_35degC.xlsx","NMC_k3_1C_35degC.xlsx","NMC_k3_2C_35degC.xlsx","NMC_k3_3C_35degC.xlsx","NMC_k3_5C_35degC.xlsx","NMC_k4_0_05C_35degC.xlsx","NMC_k4_1C_35degC.xlsx","NMC_k4_2C_35degC.xlsx","NMC_k4_3C_35degC.xlsx","NMC_k4_5C_35degC.xlsx","NMC_k5_0_05C_35degC.xlsx","NMC_k5_1C_35degC.xlsx","NMC_k5_2C_35degC.xlsx","NMC_k5_3C_35degC.xlsx","NMC_k5_5C_35degC.xlsx","NMC_k6_0_05C_35degC.xlsx","NMC_k6_1C_35degC.xlsx","NMC_k6_2C_35degC.xlsx","NMC_k6_3C_35degC.xlsx","NMC_k6_5C_35degC.xlsx"],
-    "NCA": ["NCA_k1_0_05C_35degC.xlsx","NCA_k1_1C_35degC.xlsx","NCA_k1_2C_35degC.xlsx","NCA_k1_3C_35degC.xlsx","NCA_k1_5C_35degC.xlsx","NCA_k2_0_05C_35degC.xlsx","NCA_k2_1C_35degC.xlsx","NCA_k2_2C_35degC.xlsx","NCA_k2_3C_35degC.xlsx","NCA_k2_5C_35degC.xlsx","NCA_k3_0_05C_35degC.xlsx","NCA_k3_1C_35degC.xlsx","NCA_k3_2C_35degC.xlsx","NCA_k3_3C_35degC.xlsx","NCA_k3_5C_35degC.xlsx","NCA_k4_0_05C_35degC.xlsx","NCA_k4_1C_35degC.xlsx","NCA_k4_2C_35degC.xlsx","NCA_k4_3C_35degC.xlsx","NCA_k4_5C_35degC.xlsx","NCA_k5_0_05C_35degC.xlsx","NCA_k5_1C_35degC.xlsx","NCA_k5_2C_35degC.xlsx","NCA_k5_3C_35degC.xlsx","NCA_k5_5C_35degC.xlsx","NCA_k6_0_05C_35degC.xlsx","NCA_k6_1C_35degC.xlsx","NCA_k6_2C_35degC.xlsx","NCA_k6_3C_35degC.xlsx","NCA_k6_5C_35degC.xlsx"]
+    "LFP": ["LFP_k1_0_05C_35degC.xlsx", "LFP_k1_10C_35degC.xlsx", "LFP_k1_15C_35degC.xlsx", "LFP_k1_1C_35degC.xlsx", "LFP_k1_20C_35degC.xlsx", "LFP_k1_2C_35degC.xlsx", "LFP_k1_3C_35degC.xlsx", "LFP_k1_5C_35degC.xlsx", "LFP_k2_0_05C_35degC.xlsx", "LFP_k2_10C_35degC.xlsx", "LFP_k2_15C_35degC.xlsx", "LFP_k2_1C_35degC.xlsx", "LFP_k2_20C_35degC.xlsx", "LFP_k2_2C_35degC.xlsx", "LFP_k2_3C_35degC.xlsx", "LFP_k2_5C_35degC.xlsx", "LFP_k3_0_05C_35degC.xlsx", "LFP_k3_10C_35degC.xlsx", "LFP_k3_15C_35degC.xlsx", "LFP_k3_1C_35degC.xlsx", "LFP_k3_20C_35degC.xlsx", "LFP_k3_2C_35degC.xlsx", "LFP_k3_3C_35degC.xlsx", "LFP_k3_5C_35degC.xlsx", "LFP_k4_0_05C_35degC.xlsx", "LFP_k4_10C_35degC.xlsx", "LFP_k4_15C_35degC.xlsx", "LFP_k4_1C_35degC.xlsx", "LFP_k4_20C_35degC.xlsx", "LFP_k4_2C_35degC.xlsx", "LFP_k4_3C_35degC.xlsx", "LFP_k4_5C_35degC.xlsx", "LFP_k5_0_05C_35degC.xlsx", "LFP_k5_10C_35degC.xlsx", "LFP_k5_15C_35degC.xlsx", "LFP_k5_1C_35degC.xlsx", "LFP_k5_20C_35degC.xlsx", "LFP_k5_2C_35degC.xlsx", "LFP_k5_3C_35degC.xlsx", "LFP_k5_5C_35degC.xlsx", "LFP_k6_0_05C_35degC.xlsx", "LFP_k6_10C_35degC.xlsx", "LFP_k6_15C_35degC.xlsx", "LFP_k6_1C_35degC.xlsx", "LFP_k6_20C_35degC.xlsx", "LFP_k6_2C_35degC.xlsx", "LFP_k6_3C_35degC.xlsx", "LFP_k6_5C_35degC.xlsx"],
+    "NMC": ["NMC_k1_0_05C_35degC.xlsx", "NMC_k1_1C_35degC.xlsx", "NMC_k1_2C_35degC.xlsx", "NMC_k1_3C_35degC.xlsx", "NMC_k1_5C_35degC.xlsx", "NMC_k2_0_05C_35degC.xlsx", "NMC_k2_1C_35degC.xlsx", "NMC_k2_2C_35degC.xlsx", "NMC_k2_3C_35degC.xlsx", "NMC_k2_5C_35degC.xlsx", "NMC_k3_0_05C_35degC.xlsx", "NMC_k3_1C_35degC.xlsx", "NMC_k3_2C_35degC.xlsx", "NMC_k3_3C_35degC.xlsx", "NMC_k3_5C_35degC.xlsx", "NMC_k4_0_05C_35degC.xlsx", "NMC_k4_1C_35degC.xlsx", "NMC_k4_2C_35degC.xlsx", "NMC_k4_3C_35degC.xlsx", "NMC_k4_5C_35degC.xlsx", "NMC_k5_0_05C_35degC.xlsx", "NMC_k5_1C_35degC.xlsx", "NMC_k5_2C_35degC.xlsx", "NMC_k5_3C_35degC.xlsx", "NMC_k5_5C_35degC.xlsx", "NMC_k6_0_05C_35degC.xlsx", "NMC_k6_1C_35degC.xlsx", "NMC_k6_2C_35degC.xlsx", "NMC_k6_3C_35degC.xlsx", "NMC_k6_5C_35degC.xlsx"],
+    "NCA": ["NCA_k1_0_05C_35degC.xlsx", "NCA_k1_1C_35degC.xlsx", "NCA_k1_2C_35degC.xlsx", "NCA_k1_3C_35degC.xlsx", "NCA_k1_5C_35degC.xlsx", "NCA_k2_0_05C_35degC.xlsx", "NCA_k2_1C_35degC.xlsx", "NCA_k2_2C_35degC.xlsx", "NCA_k2_3C_35degC.xlsx", "NCA_k2_5C_35degC.xlsx", "NCA_k3_0_05C_35degC.xlsx", "NCA_k3_1C_35degC.xlsx", "NCA_k3_2C_35degC.xlsx", "NCA_k3_3C_35degC.xlsx", "NCA_k3_5C_35degC.xlsx", "NCA_k4_0_05C_35degC.xlsx", "NCA_k4_1C_35degC.xlsx", "NCA_k4_2C_35degC.xlsx", "NCA_k4_3C_35degC.xlsx", "NCA_k4_5C_35degC.xlsx", "NCA_k5_0_05C_35degC.xlsx", "NCA_k5_1C_35degC.xlsx", "NCA_k5_2C_35degC.xlsx", "NCA_k5_3C_35degC.xlsx", "NCA_k5_5C_35degC.xlsx", "NCA_k6_0_05C_35degC.xlsx", "NCA_k6_1C_35degC.xlsx", "NCA_k6_2C_35degC.xlsx", "NCA_k6_3C_35degC.xlsx", "NCA_k6_5C_35degC.xlsx"]
   }
 };
 
-/* -------------------------
-   UI helpers
-   ------------------------- */
-const $ = id => document.getElementById(id);
-const showSpinner = (show, text='') => {
-  $('spinner').style.display = show ? 'block' : 'none';
-  $('statusText').textContent = show ? text || 'Processing...' : 'Idle';
-};
-const setStatus = msg => $('statusText').textContent = msg;
-const setProgress = txt => $('progress').textContent = txt;
-const setFileSummary = txt => $('fileSummary').innerHTML = txt;
-
-/* -------------------------
-   Excel fetch & parse helpers
-   ------------------------- */
-async function fetchExcel(url){
-  const r = await fetch(url);
-  if(!r.ok) throw new Error(`Failed to fetch ${url}: ${r.status}`);
-  const ab = await r.arrayBuffer();
-  const data = new Uint8Array(ab);
-  const wb = XLSX.read(data, { type:'array' });
-  const sheet = wb.Sheets[wb.SheetNames[0]];
-  return XLSX.utils.sheet_to_json(sheet, {defval: null});
+function getFolderByTemp(temp) {
+  if (temp < 20) return "5deg";
+  if (temp <= 30) return "25deg";
+  return "35deg";
 }
 
-function getTempFolder(ambient){
-  if(ambient < 20) return '5deg';
-  if(ambient <= 30) return '25deg';
-  return '35deg';
-}
-
-/* tolerant column finder (in case of tiny name differences) */
-function findKey(keys, tokens){
-  tokens = Array.isArray(tokens) ? tokens : [tokens];
-  const n = k => (''+k).replace(/[^a-z0-9]/gi,'').toLowerCase();
-  for(const token of tokens){
-    const t = token.toLowerCase().replace(/[^a-z0-9]/gi,'');
-    for(const k of keys){
-      if(n(k).includes(t)) return k;
-    }
+async function runAnalysis() {
+  const ambientTemp = parseFloat(document.getElementById("ambientTemp").value);
+  const selectedChems = Array.from(document.querySelectorAll('.checkbox-group input:checked')).map(cb => cb.value);
+  const folder = getFolderByTemp(ambientTemp);
+  const logEl = document.getElementById("log");
+  logEl.textContent = "";
+  if (!ambientTemp || selectedChems.length === 0) {
+    alert("Please enter ambient temperature and select at least one chemistry.");
+    return;
   }
-  return null;
-}
-
-/* calculate average of per-file totals for a chemistry */
-async function calculateAvgTime(folder, chemistry, ambient){
-  const arr = (filesList[folder] && filesList[folder][chemistry]) ? filesList[folder][chemistry] : [];
-  if(!arr || arr.length === 0){
-    return { averageTime: null, filesProcessed: 0, missing:true, perFileTotals: [] };
-  }
-
-  const perFileTotals = [];
-  let processed = 0;
-  for(let i=0; i < arr.length; ++i){
-    const fname = arr[i];
-    setProgress(`Processing ${chemistry}: file ${i+1}/${arr.length} — ${fname}`);
-    try{
-      const rows = await fetchExcel(`data/${folder}/${chemistry}/${fname}`);
-      processed++;
-      if(!rows || rows.length === 0){
-        perFileTotals.push(0);
-        continue;
-      }
-
-      const keys = Object.keys(rows[0]);
-      const testKey = findKey(keys, ['Test_Time','TestTime','test_time','testtime']);
-      const stepKey = findKey(keys, ['Step_Time','StepTime','step_time','steptime']);
-      const surfKey = findKey(keys, ['Surface_Temp','SurfaceTemp','surface_temp','surfacetemp']);
-
-      if(!testKey || !stepKey || !surfKey){
-        // if columns not found, push zero but mark as warning
-        perFileTotals.push(0);
-        console.warn(`Missing columns in ${fname}: keys=${keys.join(',')}`);
-        continue;
-      }
-
-      let totalForFile = 0;
-      for(const row of rows){
-        const test = parseFloat(row[testKey]);
-        const step = parseFloat(row[stepKey]);
-        const surf = parseFloat(row[surfKey]);
-        if(Number.isFinite(test) && Number.isFinite(step) && Number.isFinite(surf)){
-          if(surf > ambient){
-            totalForFile += (test - step);
-          }
+  let results = {};
+  for (let chem of selectedChems) {
+    let fileTimes = [];
+    let files = filesList[folder][chem];
+    let fileCount = files.length;
+    for (let i=0; i<fileCount; i++) {
+      logEl.textContent += `Processing ${chem}: file ${i+1}/${fileCount} — ${files[i]}\n`;
+      let response = await fetch(`data/${folder}/${chem}/${files[i]}`);
+      let arrayBuffer = await response.arrayBuffer();
+      let workbook = XLSX.read(arrayBuffer, { type: "array" });
+      let sheet = workbook.Sheets[workbook.SheetNames[0]];
+      let json = XLSX.utils.sheet_to_json(sheet);
+      let totalAbove = 0;
+      for (let row of json) {
+        if (row["Surface_Temp(degC)"] > ambientTemp) {
+          totalAbove += (row["Test_Time(s)"] - row["Step_Time(s)"]);
         }
       }
-      perFileTotals.push(totalForFile);
-    }catch(err){
-      console.warn(`Failed to read file ${fname}:`, err);
-      // treat as zero, but log
-      perFileTotals.push(0);
+      fileTimes.push(totalAbove);
     }
+    results[chem] = fileTimes.reduce((a,b)=>a+b,0) / fileTimes.length;
   }
-
-  const valid = perFileTotals.filter(x => Number.isFinite(x));
-  const avg = valid.length ? valid.reduce((a,b)=>a+b,0)/valid.length : null;
-  return { averageTime: avg, filesProcessed: processed, missing:false, perFileTotals };
+  let optimal = Object.entries(results).sort((a,b)=>a[1]-b[1])[0][0];
+  const resultEl = document.getElementById("result");
+  resultEl.style.display = "block";
+  resultEl.textContent = `✅ Optimal Battery: ${optimal}`;
 }
 
-/* -------------------------
-   Main run
-   ------------------------- */
-$('runBtn').addEventListener('click', async () => {
-  const runBtn = $('runBtn');
-  runBtn.disabled = true;
-  $('resultContainer').innerHTML = '';
-  setFileSummary('');
-  setProgress('');
-  showSpinner(true, 'Preparing...');
-
-  const ambient = parseFloat($('ambient').value);
-  const sel = Array.from($('chems').selectedOptions).map(o => o.value);
-  if(!sel.length){
-    setStatus('Select at least one chemistry');
-    runBtn.disabled = false;
-    showSpinner(false);
-    return;
-  }
-
-  const folder = getTempFolder(ambient);
-  setStatus(`Using folder data/${folder} (ambient ${ambient}°C)`);
-
-  // run for each selected chemistry
-  const results = [];
-  for(const chem of sel){
-    setStatus(`Starting ${chem}...`);
-    const res = await calculateAvgTime(folder, chem, ambient);
-    results.push({ chem, ...res });
-    // small pause to allow UI to update (browser-friendly)
-    await new Promise(r => setTimeout(r, 80));
-  }
-
-  // pick best (lowest averageTime) among those with finite avg
-  const valid = results.filter(r => r.averageTime !== null && Number.isFinite(r.averageTime));
-  if(valid.length === 0){
-    showSpinner(false);
-    setStatus('No valid data found. Check filesList and file placement.');
-    const msgs = results.map(r => `${r.chem}: filesProcessed=${r.filesProcessed}${r.missing? ' (no files listed)':''}`);
-    setFileSummary(msgs.join('<br>'));
-    runBtn.disabled = false;
-    return;
-  }
-
-  valid.sort((a,b) => a.averageTime - b.averageTime);
-  const optimal = valid[0];
-
-  // show result
-  $('resultContainer').innerHTML = `<div class="result-box">✅ Optimal Battery: ${optimal.chem} — Avg time above ambient: ${optimal.averageTime.toFixed(2)} s</div>`;
-
-  // show small per-chem summary
-  const summary = results.map(r => {
-    if(r.averageTime === null) return `${r.chem}: no files / processed=${r.filesProcessed}`;
-    return `${r.chem}: avg=${r.averageTime.toFixed(2)} s (files processed=${r.filesProcessed})`;
-  }).join('<br>');
-  setFileSummary(summary);
-
-  setStatus('Done');
-  showSpinner(false);
-  runBtn.disabled = false;
-});
-
-/* reset */
-$('resetBtn').addEventListener('click', ()=> {
-  $('ambient').value = 25;
-  Array.from($('chems').options).forEach(o => o.selected = true);
-  $('resultContainer').innerHTML = '';
-  setFileSummary('');
-  setProgress('');
-  setStatus('Idle');
-});
+function resetForm() {
+  document.getElementById("ambientTemp").value = "";
+  document.querySelectorAll('.checkbox-group input').forEach(cb => cb.checked = false);
+  document.getElementById("result").style.display = "none";
+  document.getElementById("log").textContent = "";
+}
 </script>
 </body>
 </html>
