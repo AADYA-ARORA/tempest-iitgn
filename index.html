@@ -4,7 +4,6 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>TEMPEST — Optimal Battery Finder</title>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
 <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
 <style>
   body {
@@ -29,15 +28,20 @@
     border-radius: 10px;
     box-shadow: 0px 4px 20px rgba(0,0,0,0.1);
   }
-  label {
-    font-weight: 600;
-    display: block;
+  .section-title {
+    font-size: 1.1rem;
+    font-weight: bold;
+    background-color: #1e3a8a;
+    color: white;
+    padding: 0.5rem 0.8rem;
+    border-radius: 6px;
     margin-top: 1rem;
+    display: inline-block;
   }
   input[type="number"] {
     width: 100%;
     padding: 0.6rem;
-    margin-top: 0.3rem;
+    margin-top: 0.5rem;
     border: 1px solid #ccc;
     border-radius: 5px;
     font-size: 1rem;
@@ -92,10 +96,10 @@
   🚀 TEMPEST — Optimal Battery Finder
 </header>
 <main>
-  <label>🌡 Ambient Temperature (°C)</label>
+  <div class="section-title">🌡 Ambient Temperature (°C)</div>
   <input type="number" id="ambientTemp" placeholder="Enter ambient temperature" />
 
-  <label>🔋 Select Battery Chemistries</label>
+  <div class="section-title" style="margin-top: 1.5rem;">🔋 Select Battery Chemistries</div>
   <div class="checkbox-group">
     <label><input type="checkbox" value="LFP" /> LFP</label>
     <label><input type="checkbox" value="NMC" /> NMC</label>
@@ -150,7 +154,7 @@ async function runAnalysis() {
     let files = filesList[folder][chem];
     let fileCount = files.length;
     for (let i=0; i<fileCount; i++) {
-      logEl.textContent += `Processing ${chem}: file ${i+1}/${fileCount} — ${files[i]}\n`;
+      logEl.textContent = `Processing ${chem}: file ${i+1}/${fileCount} — ${files[i]}`;
       let response = await fetch(`data/${folder}/${chem}/${files[i]}`);
       let arrayBuffer = await response.arrayBuffer();
       let workbook = XLSX.read(arrayBuffer, { type: "array" });
