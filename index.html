@@ -1,0 +1,208 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Battery Chemistry Selector</title>
+  <style>
+    :root{--accent:#0b6efd;--muted:#666;--card:#fff;--bg:#f5f7fb}
+    *{box-sizing:border-box}
+    body{font-family:system-ui,-apple-system,Segoe UI,Roboto,"Helvetica Neue",Arial;margin:0;background:var(--bg);color:#111}
+    .wrap{max-width:920px;margin:28px auto;padding:18px}
+    header{display:flex;gap:12px;align-items:center;margin-bottom:14px}
+    header h1{font-size:1.3rem;margin:0}
+    .card{background:var(--card);padding:14px;border-radius:12px;box-shadow:0 6px 18px rgba(20,20,50,0.06);margin-bottom:14px}
+    .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+    label.small{display:block;font-size:0.78rem;color:var(--muted);margin-bottom:6px}
+    input[type="number"]{width:100%;padding:8px;border-radius:8px;border:1px solid #e3e8f0;font-size:1rem}
+    .chem-row{display:flex;gap:8px;align-items:center}
+    .chem-row input[type="checkbox"]{width:18px;height:18px}
+    .controls{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+    button{background:var(--accent);color:#fff;border:0;padding:10px 14px;border-radius:10px;font-weight:600;cursor:pointer}
+    button.secondary{background:#fff;color:var(--accent);border:1px solid #dbe6ff}
+    .result{padding:12px;border-radius:10px;margin-top:10px;background:linear-gradient(180deg,#fff,#fbfdff);border:1px solid #eef5ff}
+    .muted{color:var(--muted);font-size:0.9rem}
+    table{width:100%;border-collapse:collapse;margin-top:8px}
+    td,th{padding:8px;border-bottom:1px solid #f0f3f8;text-align:left}
+    .highlight{background:#e9fbff;border-radius:6px;padding:6px 8px;display:inline-block;color:#005b77}
+    @media (max-width:720px){
+      .grid{grid-template-columns:1fr}
+      header{flex-direction:column;align-items:flex-start;gap:4px}
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <h1>Battery Chemistry Selector</h1>
+      <div class="muted">Pick ambient temp, choose chemistries, edit average temps (if needed) and compute recommendation.</div>
+    </header>
+
+    <div class="card">
+      <div style="display:flex;gap:12px;flex-wrap:wrap">
+        <div style="flex:1;min-width:180px">
+          <label class="small">Ambient temperature (°C)</label>
+          <input id="ambient" type="number" step="0.1" value="22" />
+        </div>
+
+        <div style="min-width:200px">
+          <label class="small">Select chemistries to consider</label>
+          <div class="chem-row">
+            <label><input type="checkbox" id="ch_lfp" checked /> LFP</label>
+            <label style="margin-left:10px"><input type="checkbox" id="ch_nca" checked /> NCA</label>
+            <label style="margin-left:10px"><input type="checkbox" id="ch_nmc" checked /> NMC</label>
+          </div>
+        </div>
+      </div>
+
+      <hr style="margin:12px 0;border:none;border-top:1px solid #f0f3f8" />
+
+      <div>
+        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
+          <strong>Average temps (°C) — edit values if needed</strong>
+          <div class="muted">Datasets: 5°C, 25°C, 35°C</div>
+        </div>
+
+        <div style="margin-top:10px">
+          <div class="grid">
+            <div class="card" style="padding:10px">
+              <div style="font-weight:700;margin-bottom:8px">Dataset: 5°C (ambient &lt; 15)</div>
+              <label class="small">LFP avg</label>
+              <input id="a5_lfp" type="number" step="0.1" value="10" />
+              <label class="small" style="margin-top:8px">NCA avg</label>
+              <input id="a5_nca" type="number" step="0.1" value="12" />
+              <label class="small" style="margin-top:8px">NMC avg</label>
+              <input id="a5_nmc" type="number" step="0.1" value="11" />
+            </div>
+
+            <div class="card" style="padding:10px">
+              <div style="font-weight:700;margin-bottom:8px">Dataset: 25°C (15 ≤ ambient ≤ 30)</div>
+              <label class="small">LFP avg</label>
+              <input id="a25_lfp" type="number" step="0.1" value="23" />
+              <label class="small" style="margin-top:8px">NCA avg</label>
+              <input id="a25_nca" type="number" step="0.1" value="25" />
+              <label class="small" style="margin-top:8px">NMC avg</label>
+              <input id="a25_nmc" type="number" step="0.1" value="24" />
+            </div>
+
+            <div class="card" style="padding:10px">
+              <div style="font-weight:700;margin-bottom:8px">Dataset: 35°C (ambient &gt; 30)</div>
+              <label class="small">LFP avg</label>
+              <input id="a35_lfp" type="number" step="0.1" value="34" />
+              <label class="small" style="margin-top:8px">NCA avg</label>
+              <input id="a35_nca" type="number" step="0.1" value="36" />
+              <label class="small" style="margin-top:8px">NMC avg</label>
+              <input id="a35_nmc" type="number" step="0.1" value="35" />
+            </div>
+          </div>
+        </div>
+
+        <div class="controls">
+          <button id="compute">Compute recommendation</button>
+          <button id="reset" class="secondary">Reset example values</button>
+          <div style="margin-left:auto" class="muted">Tip: edit averages then press Compute</div>
+        </div>
+
+        <div id="out" class="result" style="display:none"></div>
+      </div>
+    </div>
+
+    <footer class="muted" style="text-align:center;font-size:0.9rem">
+      Built for GitHub Pages — fully client-side (no backend required).
+    </footer>
+  </div>
+
+<script>
+  function getDatasetForAmbient(t){
+    if (t < 15) return 5;
+    if (t <= 30) return 25;
+    return 35;
+  }
+
+  function readAvg(dataset, chem){
+    // dataset = 5 | 25 | 35 ; chem = 'lfp' | 'nca' | 'nmc'
+    return parseFloat(document.getElementById('a' + dataset + '_' + chem).value);
+  }
+
+  function compute(){
+    const ambient = parseFloat(document.getElementById('ambient').value);
+    if (isNaN(ambient)){
+      alert('Please enter a valid ambient temperature.');
+      return;
+    }
+
+    const selected = [];
+    if (document.getElementById('ch_lfp').checked) selected.push('lfp');
+    if (document.getElementById('ch_nca').checked) selected.push('nca');
+    if (document.getElementById('ch_nmc').checked) selected.push('nmc');
+    if (selected.length === 0){
+      alert('Please select at least one battery chemistry to consider.');
+      return;
+    }
+
+    const dataset = getDatasetForAmbient(ambient);
+    const labels = { lfp: 'LFP', nca: 'NCA', nmc: 'NMC' };
+
+    // Build comparisons
+    const comparisons = selected.map(chem => {
+      const avg = readAvg(dataset, chem);
+      return { chem, label: labels[chem], avg };
+    });
+
+    // Filter those where ambient < avg
+    const passing = comparisons.filter(c => ambient < c.avg);
+
+    const outDiv = document.getElementById('out');
+    outDiv.style.display = 'block';
+
+    let html = `<div><strong>Ambient:</strong> ${ambient}°C — using <span class="highlight">${dataset}°C dataset</span></div>`;
+
+    html += '<table><thead><tr><th>Chemistry</th><th>Avg temp (°C)</th><th>ambient &lt; avg?</th></tr></thead><tbody>';
+    comparisons.forEach(c => {
+      html += `<tr><td>${c.label}</td><td>${c.avg}</td><td>${c.avg > ambient ? 'Yes' : 'No'}</td></tr>`;
+    });
+    html += '</tbody></table>';
+
+    if (passing.length === 0){
+      html += `<div style="margin-top:10px"><strong>Result:</strong> No selected chemistry satisfies <code>ambient &lt; avg_temp</code> for the ${dataset}°C dataset. Consider editing average temps or selecting different chemistries.</div>`;
+      outDiv.innerHTML = html;
+      return;
+    }
+
+    // Find lowest avg among passing
+    let minAvg = Math.min(...passing.map(p => p.avg));
+    const best = passing.filter(p => p.avg === minAvg);
+
+    html += `<div style="margin-top:10px"><strong>Passing chemistries:</strong> ${passing.map(p=>p.label+' ('+p.avg+'°C)').join(', ')}</div>`;
+
+    if (best.length === 1){
+      html += `<div style="margin-top:8px;font-size:1.05rem"><strong>Recommended:</strong> <span class="highlight">${best[0].label}</span> — lowest avg temp (${best[0].avg}°C) among passing chemistries.</div>`;
+    } else {
+      html += `<div style="margin-top:8px;font-size:1.05rem"><strong>Recommended (tie):</strong> ${best.map(b => '<span class="highlight">'+b.label+'</span>').join(', ')} — each has the lowest avg (${minAvg}°C).</div>`;
+    }
+
+    outDiv.innerHTML = html;
+  }
+
+  document.getElementById('compute').addEventListener('click', compute);
+
+  document.getElementById('reset').addEventListener('click', () => {
+    // restore example defaults
+    document.getElementById('ambient').value = '22';
+    document.getElementById('a5_lfp').value = '10';
+    document.getElementById('a5_nca').value = '12';
+    document.getElementById('a5_nmc').value = '11';
+    document.getElementById('a25_lfp').value = '23';
+    document.getElementById('a25_nca').value = '25';
+    document.getElementById('a25_nmc').value = '24';
+    document.getElementById('a35_lfp').value = '34';
+    document.getElementById('a35_nca').value = '36';
+    document.getElementById('a35_nmc').value = '35';
+    document.getElementById('out').style.display = 'none';
+  });
+
+  // allow Enter to compute from ambient input
+  document.getElementById('ambient').addEventListener('keydown', (e) => { if (e.key === 'Enter') compute(); });
+</script>
+</body>
+</html>
