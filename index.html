@@ -1,254 +1,103 @@
-<!doctype html>
-<html lang="en">
+<!DOCTYPE html>
+<html>
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Optimal Battery Finder (GitHub Pages)</title>
-
-  <!-- SheetJS (xlsx parser) -->
-  <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
-
+  <meta charset="UTF-8">
+  <title>TEMPEST</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
   <style>
-    :root{
-      --accent:#1976d2;
-      --bg:#f6f9fc;
-      --card:#ffffff;
-      --success:#00c853; /* bright green */
+    body { font-family: Arial, sans-serif; max-width: 600px; margin: auto; padding: 20px; }
+    h1 { text-align: center; color: #2E86C1; }
+    label { display: block; margin-top: 15px; }
+    .result-box {
+      background-color: #FFD700; padding: 15px; border-radius: 10px;
+      text-align: center; font-size: 22px; font-weight: bold; color: #000;
+      margin-top: 20px;
     }
-    body{font-family:Inter, system-ui, Arial; background:var(--bg); margin:0; padding:24px;}
-    .container{max-width:900px; margin:20px auto;}
-    .card{background:var(--card); padding:20px; border-radius:12px; box-shadow:0 6px 20px rgba(20,30,50,0.06);}
-    h1{margin:0 0 6px; color:var(--accent);}
-    p.lead{margin:6px 0 18px; color:#333;}
-    label{display:block; margin-top:12px; font-weight:600; color:#333;}
-    input[type="number"], input[type="text"], select{width:100%; padding:10px; border-radius:8px; border:1px solid #e3e8ef; margin-top:6px; box-sizing:border-box;}
-    .chem-box{display:flex; gap:12px; margin-top:8px;}
-    .chem-box label{font-weight:500;}
-    .row{display:flex; gap:12px; margin-top:12px;}
-    .row > *{flex:1;}
-    button{background:var(--accent); color:white; padding:10px 16px; border:none; border-radius:10px; cursor:pointer; font-weight:700;}
-    button:disabled{opacity:0.6; cursor:not-allowed;}
-    .result{margin-top:18px; padding:18px; border-radius:10px; text-align:center; font-size:20px; font-weight:700; color:#fff;}
-    .status{margin-top:12px; color:#444; font-size:14px;}
-    .small{font-size:13px; color:#666;}
-    .footer{margin-top:18px; text-align:center; color:#888; font-size:13px;}
+    button { margin-top: 20px; padding: 10px 20px; font-size: 16px; }
   </style>
 </head>
 <body>
-  <div class="container">
-    <div class="card">
-      <h1>🔋 Optimal Battery Finder (GitHub Pages)</h1>
-      <p class="lead">Provide your repo & inputs; the client-side app will fetch Excel files from your repo and compute the optimal chemistry.</p>
 
-      <label>GitHub Username (owner)</label>
-      <input id="ownerInput" type="text" placeholder="github-username" value="your-github-username">
+<h1>TEMPEST🔋</h1>
 
-      <label>Repository name</label>
-      <input id="repoInput" type="text" placeholder="repo-name" value="your-repo-name">
+<label>🌡 Enter Ambient Temperature (°C):</label>
+<input type="number" id="ambient" step="0.5" min="-10" max="60" value="25">
 
-      <label>Base data path in repo (default: <code>data</code>)</label>
-      <input id="basePathInput" type="text" value="data">
+<label>🔍 Select Battery Chemistries:</label>
+<select id="chems" multiple size="3">
+  <option value="LFP" selected>LFP</option>
+  <option value="NMC" selected>NMC</option>
+  <option value="NCA" selected>NCA</option>
+</select>
 
-      <label>Ambient Temperature (°C)</label>
-      <input id="ambientInput" type="number" step="0.5" value="25">
+<button onclick="runAnalysis()">🚀 Run Analysis</button>
 
-      <label>Select chemistries (choose 1/2/all)</label>
-      <div class="chem-box">
-        <label><input type="checkbox" value="LFP" class="chem" checked> LFP</label>
-        <label><input type="checkbox" value="NMC" class="chem" checked> NMC</label>
-        <label><input type="checkbox" value="NCA" class="chem" checked> NCA</label>
-      </div>
-
-      <div style="margin-top:16px; display:flex; gap:12px;">
-        <button id="runBtn">🚀 Run Analysis</button>
-        <button id="clearBtn" style="background:#999;">Clear / Reset</button>
-      </div>
-
-      <div id="status" class="status small">Status: waiting for input</div>
-
-      <div id="resultBox" style="display:none;" class="result"></div>
-      <div id="debug" class="small" style="margin-top:10px;"></div>
-    </div>
-
-    <div class="footer">
-      <p>Repository must be <b>public</b>, and Excel files must be placed at <code>/{dataBase}/5deg|25deg|35deg/&lt;chemistry&gt;/*.xlsx</code>.</p>
-    </div>
-  </div>
+<div id="result"></div>
 
 <script>
-(async ()=>{
+async function fetchExcel(url) {
+  const response = await fetch(url);
+  const arrayBuffer = await response.arrayBuffer();
+  const data = new Uint8Array(arrayBuffer);
+  const workbook = XLSX.read(data, { type: "array" });
+  const sheetName = workbook.SheetNames[0];
+  return XLSX.utils.sheet_to_json(workbook.Sheets[sheetName]);
+}
 
-  // helpers
-  function el(id){return document.getElementById(id);}
-  function updateStatus(msg){ el('status').textContent = 'Status: ' + msg; }
-  function normKey(k){ return (''+k).replace(/[^a-z0-9]/gi,'').toLowerCase(); }
+function getTempFolder(ambient) {
+  if (ambient < 20) return "5deg";
+  if (ambient <= 30) return "25deg";
+  return "35deg";
+}
 
-  // find best matching column key given row keys and target token
-  function findColKey(keys, token){
-    token = token.toLowerCase();
-    for(const k of keys){
-      if(normKey(k).includes(token)) return k;
-    }
-    return null;
+async function calculateAvgTime(folder, chemistry, ambient) {
+  // NOTE: You must list files manually or via JSON because browser can't list folder contents
+  const filesList = {
+  "5deg": {
+    "LFP": ["LFP_k1_0_05C_05degC.xlsx", "LFP_k1_10C_05degC.xlsx", "LFP_k1_15C_05degC.xlsx", "LFP_k1_1C_05degC.xlsx", "LFP_k1_20C_05degC.xlsx", "LFP_k1_2C_05degC.xlsx", "LFP_k1_3C_05degC.xlsx", "LFP_k1_5C_05degC.xlsx", "LFP_k2_0_05C_05degC.xlsx", "LFP_k2_10C_05degC.xlsx", "LFP_k2_15C_05degC.xlsx", "LFP_k2_1C_05degC.xlsx", "LFP_k2_20C_05degC.xlsx", "LFP_k2_2C_05degC.xlsx", "LFP_k2_3C_05degC.xlsx", "LFP_k2_5C_05degC.xlsx", "LFP_k3_0_05C_05degC.xlsx", "LFP_k3_10C_05degC.xlsx", "LFP_k3_15C_05degC.xlsx", "LFP_k3_1C_05degC.xlsx", "LFP_k3_20C_05degC.xlsx", "LFP_k3_2C_05degC.xlsx", "LFP_k3_3C_05degC.xlsx", "LFP_k3_5C_05degC.xlsx", "LFP_k4_0_05C_05degC.xlsx", "LFP_k4_10C_05degC.xlsx", "LFP_k4_15C_05degC.xlsx", "LFP_k4_1C_05degC.xlsx", "LFP_k4_20C_05degC.xlsx", "LFP_k4_2C_05degC.xlsx", "LFP_k4_3C_05degC.xlsx", "LFP_k4_5C_05degC.xlsx", "LFP_k5_0_05C_05degC.xlsx", "LFP_k5_10C_05degC.xlsx", "LFP_k5_15C_05degC.xlsx", "LFP_k5_1C_05degC.xlsx", "LFP_k5_20C_05degC.xlsx", "LFP_k5_2C_05degC.xlsx", "LFP_k5_3C_05degC.xlsx", "LFP_k5_5C_05degC.xlsx", "LFP_k6_0_05C_05degC.xlsx", "LFP_k6_10C_05degC.xlsx", "LFP_k6_15C_05degC.xlsx", "LFP_k6_1C_05degC.xlsx", "LFP_k6_20C_05degC.xlsx", "LFP_k6_2C_05degC.xlsx", "LFP_k6_3C_05degC.xlsx", "LFP_k6_5C_05degC.xlsx"],
+    "NMC": ["NMC_k1_0_05C_05degC.xlsx", "NMC_k1_1C_05degC.xlsx", "NMC_k1_2C_05degC.xlsx", "NMC_k1_3C_05degC.xlsx", "NMC_k1_5C_05degC.xlsx", "NMC_k2_0_05C_05degC.xlsx", "NMC_k2_1C_05degC.xlsx", "NMC_k2_2C_05degC.xlsx", "NMC_k2_3C_05degC.xlsx", "NMC_k2_5C_05degC.xlsx", "NMC_k3_0_05C_05degC.xlsx", "NMC_k3_1C_05degC.xlsx", "NMC_k3_2C_05degC.xlsx", "NMC_k3_3C_05degC.xlsx", "NMC_k3_5C_05degC.xlsx", "NMC_k4_0_05C_05degC.xlsx", "NMC_k4_1C_05degC.xlsx", "NMC_k4_2C_05degC.xlsx", "NMC_k4_3C_05degC.xlsx", "NMC_k4_5C_05degC.xlsx", "NMC_k5_0_05C_05degC.xlsx", "NMC_k5_1C_05degC.xlsx", "NMC_k5_2C_05degC.xlsx", "NMC_k5_3C_05degC.xlsx", "NMC_k5_5C_05degC.xlsx", "NMC_k6_0_05C_05degC.xlsx", "NMC_k6_1C_05degC.xlsx", "NMC_k6_2C_05degC.xlsx", "NMC_k6_3C_05degC.xlsx", "NMC_k6_5C_05degC.xlsx"],
+    "NCA": ["NCA_k1_0_05C_05degC.xlsx", "NCA_k1_1C_05degC.xlsx", "NCA_k1_2C_05degC.xlsx", "NCA_k1_3C_05degC.xlsx", "NCA_k1_5C_05degC.xlsx", "NCA_k2_0_05C_05degC.xlsx", "NCA_k2_1C_05degC.xlsx", "NCA_k2_2C_05degC.xlsx", "NCA_k2_3C_05degC.xlsx", "NCA_k2_5C_05degC.xlsx", "NCA_k3_0_05C_05degC.xlsx", "NCA_k3_1C_05degC.xlsx", "NCA_k3_2C_05degC.xlsx", "NCA_k3_3C_05degC.xlsx", "NCA_k3_5C_05degC.xlsx", "NCA_k4_0_05C_05degC.xlsx", "NCA_k4_1C_05degC.xlsx", "NCA_k4_2C_05degC.xlsx", "NCA_k4_3C_05degC.xlsx", "NCA_k4_5C_05degC.xlsx", "NCA_k5_0_05C_05degC.xlsx", "NCA_k5_1C_05degC.xlsx", "NCA_k5_2C_05degC.xlsx", "NCA_k5_3C_05degC.xlsx", "NCA_k5_5C_05degC.xlsx", "NCA_k6_0_05C_05degC.xlsx", "NCA_k6_1C_05degC.xlsx", "NCA_k6_2C_05degC.xlsx", "NCA_k6_3C_05degC.xlsx", "NCA_k6_5C_05degC.xlsx"]
+  },
+  "25deg": {
+    "LFP": ["LFP_k1_0_05C_25degC.xlsx", "LFP_k1_10C_25degC.xlsx", "LFP_k1_15C_25degC.xlsx", "LFP_k1_1C_25degC.xlsx", "LFP_k1_20C_25degC.xlsx", "LFP_k1_2C_25degC.xlsx", "LFP_k1_3C_25degC.xlsx", "LFP_k1_5C_25degC.xlsx", "LFP_k2_0_05C_25degC.xlsx", "LFP_k2_10C_25degC.xlsx", "LFP_k2_15C_25degC.xlsx", "LFP_k2_1C_25degC.xlsx", "LFP_k2_20C_25degC.xlsx", "LFP_k2_2C_25degC.xlsx", "LFP_k2_3C_25degC.xlsx", "LFP_k2_5C_25degC.xlsx", "LFP_k3_0_05C_25degC.xlsx", "LFP_k3_10C_25degC.xlsx", "LFP_k3_15C_25degC.xlsx", "LFP_k3_1C_25degC.xlsx", "LFP_k3_20C_25degC.xlsx", "LFP_k3_2C_25degC.xlsx", "LFP_k3_3C_25degC.xlsx", "LFP_k3_5C_25degC.xlsx", "LFP_k4_0_05C_25degC.xlsx", "LFP_k4_10C_25degC.xlsx", "LFP_k4_15C_25degC.xlsx", "LFP_k4_1C_25degC.xlsx", "LFP_k4_20C_25degC.xlsx", "LFP_k4_2C_25degC.xlsx", "LFP_k4_3C_25degC.xlsx", "LFP_k4_5C_25degC.xlsx", "LFP_k5_0_05C_25degC.xlsx", "LFP_k5_10C_25degC.xlsx", "LFP_k5_15C_25degC.xlsx", "LFP_k5_1C_25degC.xlsx", "LFP_k5_20C_25degC.xlsx", "LFP_k5_2C_25degC.xlsx", "LFP_k5_3C_25degC.xlsx", "LFP_k5_5C_25degC.xlsx", "LFP_k6_0_05C_25degC.xlsx", "LFP_k6_10C_25degC.xlsx", "LFP_k6_15C_25degC.xlsx", "LFP_k6_1C_25degC.xlsx", "LFP_k6_20C_25degC.xlsx", "LFP_k6_2C_25degC.xlsx", "LFP_k6_3C_25degC.xlsx", "LFP_k6_5C_25degC.xlsx"],
+    "NMC": ["NMC_k1_0_05C_25degC.xlsx", "NMC_k1_1C_25degC.xlsx", "NMC_k1_2C_25degC.xlsx", "NMC_k1_3C_25degC.xlsx", "NMC_k1_5C_25degC.xlsx", "NMC_k2_0_05C_25degC.xlsx", "NMC_k2_1C_25degC.xlsx", "NMC_k2_2C_25degC.xlsx", "NMC_k2_3C_25degC.xlsx", "NMC_k2_5C_25degC.xlsx", "NMC_k3_0_05C_25degC.xlsx", "NMC_k3_1C_25degC.xlsx", "NMC_k3_2C_25degC.xlsx", "NMC_k3_3C_25degC.xlsx", "NMC_k3_5C_25degC.xlsx", "NMC_k4_0_05C_25degC.xlsx", "NMC_k4_1C_25degC.xlsx", "NMC_k4_2C_25degC.xlsx", "NMC_k4_3C_25degC.xlsx", "NMC_k4_5C_25degC.xlsx", "NMC_k5_0_05C_25degC.xlsx", "NMC_k5_1C_25degC.xlsx", "NMC_k5_2C_25degC.xlsx", "NMC_k5_3C_25degC.xlsx", "NMC_k5_5C_25degC.xlsx", "NMC_k6_0_05C_25degC.xlsx", "NMC_k6_1C_25degC.xlsx", "NMC_k6_2C_25degC.xlsx", "NMC_k6_3C_25degC.xlsx", "NMC_k6_5C_25degC.xlsx"],
+    "NCA": ["NCA_k1_0_05C_25degC.xlsx", "NCA_k1_1C_25degC.xlsx", "NCA_k1_2C_25degC.xlsx", "NCA_k1_3C_25degC.xlsx", "NCA_k1_5C_25degC.xlsx", "NCA_k2_0_05C_25degC.xlsx", "NCA_k2_1C_25degC.xlsx", "NCA_k2_2C_25degC.xlsx", "NCA_k2_3C_25degC.xlsx", "NCA_k2_5C_25degC.xlsx", "NCA_k3_0_05C_25degC.xlsx", "NCA_k3_1C_25degC.xlsx", "NCA_k3_2C_25degC.xlsx", "NCA_k3_3C_25degC.xlsx", "NCA_k3_5C_25degC.xlsx", "NCA_k4_0_05C_25degC.xlsx", "NCA_k4_1C_25degC.xlsx", "NCA_k4_2C_25degC.xlsx", "NCA_k4_3C_25degC.xlsx", "NCA_k4_5C_25degC.xlsx", "NCA_k5_0_05C_25degC.xlsx", "NCA_k5_1C_25degC.xlsx", "NCA_k5_2C_25degC.xlsx", "NCA_k5_3C_25degC.xlsx", "NCA_k5_5C_25degC.xlsx", "NCA_k6_0_05C_25degC.xlsx", "NCA_k6_1C_25degC.xlsx", "NCA_k6_2C_25degC.xlsx", "NCA_k6_3C_25degC.xlsx", "NCA_k6_5C_25degC.xlsx"]
+  },
+  "35deg": {
+    "LFP": ["LFP_k1_0_05C_35degC.xlsx", "LFP_k1_10C_35degC.xlsx", "LFP_k1_15C_35degC.xlsx", "LFP_k1_1C_35degC.xlsx", "LFP_k1_20C_35degC.xlsx", "LFP_k1_2C_35degC.xlsx", "LFP_k1_3C_35degC.xlsx", "LFP_k1_5C_35degC.xlsx", "LFP_k2_0_05C_35degC.xlsx", "LFP_k2_10C_35degC.xlsx", "LFP_k2_15C_35degC.xlsx", "LFP_k2_1C_35degC.xlsx", "LFP_k2_20C_35degC.xlsx", "LFP_k2_2C_35degC.xlsx", "LFP_k2_3C_35degC.xlsx", "LFP_k2_5C_35degC.xlsx", "LFP_k3_0_05C_35degC.xlsx", "LFP_k3_10C_35degC.xlsx", "LFP_k3_15C_35degC.xlsx", "LFP_k3_1C_35degC.xlsx", "LFP_k3_20C_35degC.xlsx", "LFP_k3_2C_35degC.xlsx", "LFP_k3_3C_35degC.xlsx", "LFP_k3_5C_35degC.xlsx", "LFP_k4_0_05C_35degC.xlsx", "LFP_k4_10C_35degC.xlsx", "LFP_k4_15C_35degC.xlsx", "LFP_k4_1C_35degC.xlsx", "LFP_k4_20C_35degC.xlsx", "LFP_k4_2C_35degC.xlsx", "LFP_k4_3C_35degC.xlsx", "LFP_k4_5C_35degC.xlsx", "LFP_k5_0_05C_35degC.xlsx", "LFP_k5_10C_35degC.xlsx", "LFP_k5_15C_35degC.xlsx", "LFP_k5_1C_35degC.xlsx", "LFP_k5_20C_35degC.xlsx", "LFP_k5_2C_35degC.xlsx", "LFP_k5_3C_35degC.xlsx", "LFP_k5_5C_35degC.xlsx", "LFP_k6_0_05C_35degC.xlsx", "LFP_k6_10C_35degC.xlsx", "LFP_k6_15C_35degC.xlsx", "LFP_k6_1C_35degC.xlsx", "LFP_k6_20C_35degC.xlsx", "LFP_k6_2C_35degC.xlsx", "LFP_k6_3C_35degC.xlsx", "LFP_k6_5C_35degC.xlsx"],
+    "NMC": ["NMC_k1_0_05C_35degC.xlsx", "NMC_k1_1C_35degC.xlsx", "NMC_k1_2C_35degC.xlsx", "NMC_k1_3C_35degC.xlsx", "NMC_k1_5C_35degC.xlsx", "NMC_k2_0_05C_35degC.xlsx", "NMC_k2_1C_35degC.xlsx", "NMC_k2_2C_35degC.xlsx", "NMC_k2_3C_35degC.xlsx", "NMC_k2_5C_35degC.xlsx", "NMC_k3_0_05C_35degC.xlsx", "NMC_k3_1C_35degC.xlsx", "NMC_k3_2C_35degC.xlsx", "NMC_k3_3C_35degC.xlsx", "NMC_k3_5C_35degC.xlsx", "NMC_k4_0_05C_35degC.xlsx", "NMC_k4_1C_35degC.xlsx", "NMC_k4_2C_35degC.xlsx", "NMC_k4_3C_35degC.xlsx", "NMC_k4_5C_35degC.xlsx", "NMC_k5_0_05C_35degC.xlsx", "NMC_k5_1C_35degC.xlsx", "NMC_k5_2C_35degC.xlsx", "NMC_k5_3C_35degC.xlsx", "NMC_k5_5C_35degC.xlsx", "NMC_k6_0_05C_35degC.xlsx", "NMC_k6_1C_35degC.xlsx", "NMC_k6_2C_35degC.xlsx", "NMC_k6_3C_35degC.xlsx", "NMC_k6_5C_35degC.xlsx"],
+    "NCA": ["NCA_k1_0_05C_35degC.xlsx", "NCA_k1_1C_35degC.xlsx", "NCA_k1_2C_35degC.xlsx", "NCA_k1_3C_35degC.xlsx", "NCA_k1_5C_35degC.xlsx", "NCA_k2_0_05C_35degC.xlsx", "NCA_k2_1C_35degC.xlsx", "NCA_k2_2C_35degC.xlsx", "NCA_k2_3C_35degC.xlsx", "NCA_k2_5C_35degC.xlsx", "NCA_k3_0_05C_35degC.xlsx", "NCA_k3_1C_35degC.xlsx", "NCA_k3_2C_35degC.xlsx", "NCA_k3_3C_35degC.xlsx", "NCA_k3_5C_35degC.xlsx", "NCA_k4_0_05C_35degC.xlsx", "NCA_k4_1C_35degC.xlsx", "NCA_k4_2C_35degC.xlsx", "NCA_k4_3C_35degC.xlsx", "NCA_k4_5C_35degC.xlsx", "NCA_k5_0_05C_35degC.xlsx", "NCA_k5_1C_35degC.xlsx", "NCA_k5_2C_35degC.xlsx", "NCA_k5_3C_35degC.xlsx", "NCA_k5_5C_35degC.xlsx", "NCA_k6_0_05C_35degC.xlsx", "NCA_k6_1C_35degC.xlsx", "NCA_k6_2C_35degC.xlsx", "NCA_k6_3C_35degC.xlsx", "NCA_k6_5C_35degC.xlsx"]
+  }
+};
+
+  const times = [];
+  for (const file of filesList[folder][chemistry]) 
+    const df = await fetchExcel(`data/${folder}/${chemistry}/${file}`);
+    const filtered = df.filter(row => row["Surface_Temp(degC)"] > ambient);
+    const totalTime = filtered.reduce((sum, row) => {
+      return sum + (Number(row["Test_Time(s)"]) - Number(row["Step_Time(s)"]));
+    }, 0);
+    times.push(totalTime);
+  }
+  if (times.length === 0) return null;
+  return times.reduce((a,b) => a+b, 0) / times.length;
+}
+
+async function runAnalysis() {
+  const ambient = parseFloat(document.getElementById("ambient").value);
+  const selected = Array.from(document.getElementById("chems").selectedOptions).map(o => o.value);
+  const folder = getTempFolder(ambient);
+
+  let results = [];
+  for (const chem of selected) {
+    const avgTime = await calculateAvgTime(folder, chem, ambient);
+    results.push({ chem, avgTime });
   }
 
-  async function listRepoPath(owner, repo, path){
-    const api = `https://api.github.com/repos/${owner}/${repo}/contents/${encodeURIComponent(path)}`;
-    const r = await fetch(api);
-    if(!r.ok){
-      throw new Error('Listing failed: ' + r.status + ' ' + r.statusText + ' (path: ' + path + ')');
-    }
-    return r.json(); // array of items
-  }
-
-  async function fetchXlsxAsJson(url){
-    const r = await fetch(url);
-    if(!r.ok) throw new Error('Fetch file failed: ' + r.status);
-    const ab = await r.arrayBuffer();
-    const data = new Uint8Array(ab);
-    const wb = XLSX.read(data, {type:'array'});
-    const ws = wb.Sheets[wb.SheetNames[0]];
-    const rows = XLSX.utils.sheet_to_json(ws, {defval:null});
-    return rows; // array of objects
-  }
-
-  async function computeForChem(owner, repo, basePath, folderName, chem, ambient){
-    // list files in data/<folderName>/<chem>
-    const path = `${basePath}/${folderName}/${chem}`;
-    let items;
-    try{
-      items = await listRepoPath(owner, repo, path);
-    }catch(e){
-      // no folder or API error
-      console.warn('listRepoPath error for', path, e);
-      return {chem, averageTime:null, filesProcessed:0, error:e.message};
-    }
-
-    // filter .xlsx files
-    const xlsxFiles = items.filter(it => it.type === 'file' && it.name.toLowerCase().endsWith('.xlsx'));
-    if(xlsxFiles.length === 0){
-      return {chem, averageTime:null, filesProcessed:0, error:'No .xlsx files found in ' + path};
-    }
-
-    const perFileTotals = [];
-    for(const f of xlsxFiles){
-      updateStatus(`Downloading ${chem} / ${f.name} ...`);
-      try{
-        const rows = await fetchXlsxAsJson(f.download_url);
-        if(rows.length === 0){
-          perFileTotals.push(0);
-          continue;
-        }
-        // find keys
-        const keys = Object.keys(rows[0]);
-        const testKey = findColKey(keys, 'testtime') || findColKey(keys,'test_time') || findColKey(keys,'test');
-        const stepKey = findColKey(keys, 'steptime') || findColKey(keys,'step_time') || findColKey(keys,'step');
-        const surfKey = findColKey(keys, 'surfacetemp') || findColKey(keys,'surface_temp') || findColKey(keys,'surface');
-
-        if(!testKey || !stepKey || !surfKey){
-          // try scanning all keys robustly
-          perFileTotals.push(0);
-          console.warn('Could not find columns for file', f.name, keys);
-          continue;
-        }
-
-        let totalForFile = 0;
-        for(const r of rows){
-          const test = parseFloat(r[testKey]);
-          const step = parseFloat(r[stepKey]);
-          const surf = parseFloat(r[surfKey]);
-          if(Number.isFinite(test) && Number.isFinite(step) && Number.isFinite(surf)){
-            if(surf > ambient){
-              totalForFile += (test - step);
-            }
-          }
-        }
-        perFileTotals.push(totalForFile);
-      }catch(e){
-        console.error('Error processing file', f.name, e);
-        // treat failed file as zero contribution but keep count
-      }
-    } // files loop
-
-    // compute average across files
-    const valid = perFileTotals.filter(x => Number.isFinite(x));
-    const avg = valid.length ? (valid.reduce((a,b)=>a+b,0)/valid.length) : null;
-    return {chem, averageTime: avg, filesProcessed: xlsxFiles.length, perFileTotals};
-  }
-
-  // UI wiring
-  const runBtn = el('runBtn'), clearBtn = el('clearBtn'), resultBox = el('resultBox'), debug = el('debug');
-
-  runBtn.addEventListener('click', async ()=>{
-    const owner = el('ownerInput').value.trim();
-    const repo = el('repoInput').value.trim();
-    const basePath = el('basePathInput').value.trim() || 'data';
-    const ambient = parseFloat(el('ambientInput').value);
-    const chems = Array.from(document.querySelectorAll('.chem:checked')).map(i => i.value);
-
-    resultBox.style.display = 'none';
-    debug.textContent = '';
-    if(!owner || !repo){ updateStatus('Please enter GitHub owner & repo'); return; }
-    if(!chems.length){ updateStatus('Please select at least one chemistry'); return; }
-
-    runBtn.disabled = true;
-    updateStatus('Starting analysis...');
-
-    // choose folder
-    let folderName = '25deg';
-    if(ambient < 20) folderName = '5deg';
-    else if(ambient > 30) folderName = '35deg';
-
-    updateStatus(`Using folder ${folderName} (ambient ${ambient}°C)`);
-
-    const results = [];
-    for(const chem of chems){
-      try{
-        const r = await computeForChem(owner, repo, basePath, folderName, chem, ambient);
-        results.push(r);
-      }catch(e){
-        results.push({chem, averageTime:null, filesProcessed:0, error:e.message});
-      }
-    }
-
-    // choose lowest averageTime (non-null). If tie, first encountered.
-    const validResults = results.filter(r=> r.averageTime !== null && Number.isFinite(r.averageTime));
-    if(validResults.length === 0){
-      updateStatus('No valid data found for selected chemistries.');
-      resultBox.style.display = 'block';
-      resultBox.style.background = '#ff5252';
-      resultBox.textContent = 'No valid data found / check repository structure and files';
-      runBtn.disabled = false;
-      return;
-    }
-
-    validResults.sort((a,b)=> a.averageTime - b.averageTime);
-    const optimal = validResults[0];
-
-    // show result
-    resultBox.style.display = 'block';
-    resultBox.style.background = 'linear-gradient(90deg, #00c853, #00e676)'; // bright green gradient
-    resultBox.textContent = `✅ Optimal Battery: ${optimal.chem} — Avg time above ambient: ${optimal.averageTime.toFixed(2)} s`;
-
-    // optional debug details (hidden unless you want)
-    debug.innerHTML = 'Details (for debugging):<br>' + results.map(r=>{
-      if(r.averageTime === null) return `${r.chem}: no-data / files=${r.filesProcessed} ${r.error ? '| err: '+r.error : ''}`;
-      return `${r.chem}: avg=${r.averageTime.toFixed(2)} s (files=${r.filesProcessed})`;
-    }).join('<br>');
-
-    updateStatus('Done');
-    runBtn.disabled = false;
-  });
-
-  clearBtn.addEventListener('click', ()=>{
-    el('ambientInput').value = 25;
-    document.querySelectorAll('.chem').forEach(cb => cb.checked = true);
-    el('resultBox').style.display = 'none';
-    el('status').textContent = 'Status: waiting for input';
-    el('debug').textContent = '';
-  });
-
-})();
+  const optimal = results.reduce((min, r) => r.avgTime < min.avgTime ? r : min);
+  document.getElementById("result").innerHTML =
+    `<div class="result-box">✅ Optimal Battery: ${optimal.chem}</div>`;
+}
 </script>
 
 </body>
