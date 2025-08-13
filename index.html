@@ -103,6 +103,13 @@
       text-align: center;
       color: #444;
     }
+    #processLog {
+      margin-top: 15px;
+      font-size: 1rem;
+      font-weight: 500;
+      text-align: center;
+      color: #555;
+    }
   </style>
 </head>
 <body>
@@ -127,13 +134,13 @@
       <div id="out" style="display:none">
         <div id="recommendation" class="result"></div>
         <div id="extra" class="comment"></div>
+        <div id="processLog"></div>
       </div>
     </div>
   </main>
 
   <script>
     // ====== Fixed Average Temperatures ======
-    // Edit these values if needed
     const avgTemps = {
       5:  { lfp: 7, nca: 6, nmc: 5 },
       25: { lfp: 25, nca: 26, nmc: 27 },
@@ -147,10 +154,53 @@
       nmc: "NCA – Works well in cool to mild temperatures, but requires tight thermal control in warmth."
     };
 
+    // ====== Example Files List ======
+    const filesList = {
+  "5deg": {
+    "LFP": ["LFP_k1_0_05C_05degC.xlsx", "LFP_k1_10C_05degC.xlsx", "LFP_k1_15C_05degC.xlsx", "LFP_k1_1C_05degC.xlsx", "LFP_k1_20C_05degC.xlsx", "LFP_k1_2C_05degC.xlsx", "LFP_k1_3C_05degC.xlsx", "LFP_k1_5C_05degC.xlsx", "LFP_k2_0_05C_05degC.xlsx", "LFP_k2_10C_05degC.xlsx", "LFP_k2_15C_05degC.xlsx", "LFP_k2_1C_05degC.xlsx", "LFP_k2_20C_05degC.xlsx", "LFP_k2_2C_05degC.xlsx", "LFP_k2_3C_05degC.xlsx", "LFP_k2_5C_05degC.xlsx", "LFP_k3_0_05C_05degC.xlsx", "LFP_k3_10C_05degC.xlsx", "LFP_k3_15C_05degC.xlsx", "LFP_k3_1C_05degC.xlsx", "LFP_k3_20C_05degC.xlsx", "LFP_k3_2C_05degC.xlsx", "LFP_k3_3C_05degC.xlsx", "LFP_k3_5C_05degC.xlsx", "LFP_k4_0_05C_05degC.xlsx", "LFP_k4_10C_05degC.xlsx", "LFP_k4_15C_05degC.xlsx", "LFP_k4_1C_05degC.xlsx", "LFP_k4_20C_05degC.xlsx", "LFP_k4_2C_05degC.xlsx", "LFP_k4_3C_05degC.xlsx", "LFP_k4_5C_05degC.xlsx", "LFP_k5_0_05C_05degC.xlsx", "LFP_k5_10C_05degC.xlsx", "LFP_k5_15C_05degC.xlsx", "LFP_k5_1C_05degC.xlsx", "LFP_k5_20C_05degC.xlsx", "LFP_k5_2C_05degC.xlsx", "LFP_k5_3C_05degC.xlsx", "LFP_k5_5C_05degC.xlsx", "LFP_k6_0_05C_05degC.xlsx", "LFP_k6_10C_05degC.xlsx", "LFP_k6_15C_05degC.xlsx", "LFP_k6_1C_05degC.xlsx", "LFP_k6_20C_05degC.xlsx", "LFP_k6_2C_05degC.xlsx", "LFP_k6_3C_05degC.xlsx", "LFP_k6_5C_05degC.xlsx"],
+    "NMC": ["NMC_k1_0_05C_05degC.xlsx", "NMC_k1_1C_05degC.xlsx", "NMC_k1_2C_05degC.xlsx", "NMC_k1_3C_05degC.xlsx", "NMC_k1_5C_05degC.xlsx", "NMC_k2_0_05C_05degC.xlsx", "NMC_k2_1C_05degC.xlsx", "NMC_k2_2C_05degC.xlsx", "NMC_k2_3C_05degC.xlsx", "NMC_k2_5C_05degC.xlsx", "NMC_k3_0_05C_05degC.xlsx", "NMC_k3_1C_05degC.xlsx", "NMC_k3_2C_05degC.xlsx", "NMC_k3_3C_05degC.xlsx", "NMC_k3_5C_05degC.xlsx", "NMC_k4_0_05C_05degC.xlsx", "NMC_k4_1C_05degC.xlsx", "NMC_k4_2C_05degC.xlsx", "NMC_k4_3C_05degC.xlsx", "NMC_k4_5C_05degC.xlsx", "NMC_k5_0_05C_05degC.xlsx", "NMC_k5_1C_05degC.xlsx", "NMC_k5_2C_05degC.xlsx", "NMC_k5_3C_05degC.xlsx", "NMC_k5_5C_05degC.xlsx", "NMC_k6_0_05C_05degC.xlsx", "NMC_k6_1C_05degC.xlsx", "NMC_k6_2C_05degC.xlsx", "NMC_k6_3C_05degC.xlsx", "NMC_k6_5C_05degC.xlsx"],
+    "NCA": ["NCA_k1_0_05C_05degC.xlsx", "NCA_k1_1C_05degC.xlsx", "NCA_k1_2C_05degC.xlsx", "NCA_k1_3C_05degC.xlsx", "NCA_k1_5C_05degC.xlsx", "NCA_k2_0_05C_05degC.xlsx", "NCA_k2_1C_05degC.xlsx", "NCA_k2_2C_05degC.xlsx", "NCA_k2_3C_05degC.xlsx", "NCA_k2_5C_05degC.xlsx", "NCA_k3_0_05C_05degC.xlsx", "NCA_k3_1C_05degC.xlsx", "NCA_k3_2C_05degC.xlsx", "NCA_k3_3C_05degC.xlsx", "NCA_k3_5C_05degC.xlsx", "NCA_k4_0_05C_05degC.xlsx", "NCA_k4_1C_05degC.xlsx", "NCA_k4_2C_05degC.xlsx", "NCA_k4_3C_05degC.xlsx", "NCA_k4_5C_05degC.xlsx", "NCA_k5_0_05C_05degC.xlsx", "NCA_k5_1C_05degC.xlsx", "NCA_k5_2C_05degC.xlsx", "NCA_k5_3C_05degC.xlsx", "NCA_k5_5C_05degC.xlsx", "NCA_k6_0_05C_05degC.xlsx", "NCA_k6_1C_05degC.xlsx", "NCA_k6_2C_05degC.xlsx", "NCA_k6_3C_05degC.xlsx", "NCA_k6_5C_05degC.xlsx"]
+  },
+  "25deg": {
+    "LFP": ["LFP_k1_0_05C_25degC.xlsx", "LFP_k1_10C_25degC.xlsx", "LFP_k1_15C_25degC.xlsx", "LFP_k1_1C_25degC.xlsx", "LFP_k1_20C_25degC.xlsx", "LFP_k1_2C_25degC.xlsx", "LFP_k1_3C_25degC.xlsx", "LFP_k1_5C_25degC.xlsx", "LFP_k2_0_05C_25degC.xlsx", "LFP_k2_10C_25degC.xlsx", "LFP_k2_15C_25degC.xlsx", "LFP_k2_1C_25degC.xlsx", "LFP_k2_20C_25degC.xlsx", "LFP_k2_2C_25degC.xlsx", "LFP_k2_3C_25degC.xlsx", "LFP_k2_5C_25degC.xlsx", "LFP_k3_0_05C_25degC.xlsx", "LFP_k3_10C_25degC.xlsx", "LFP_k3_15C_25degC.xlsx", "LFP_k3_1C_25degC.xlsx", "LFP_k3_20C_25degC.xlsx", "LFP_k3_2C_25degC.xlsx", "LFP_k3_3C_25degC.xlsx", "LFP_k3_5C_25degC.xlsx", "LFP_k4_0_05C_25degC.xlsx", "LFP_k4_10C_25degC.xlsx", "LFP_k4_15C_25degC.xlsx", "LFP_k4_1C_25degC.xlsx", "LFP_k4_20C_25degC.xlsx", "LFP_k4_2C_25degC.xlsx", "LFP_k4_3C_25degC.xlsx", "LFP_k4_5C_25degC.xlsx", "LFP_k5_0_05C_25degC.xlsx", "LFP_k5_10C_25degC.xlsx", "LFP_k5_15C_25degC.xlsx", "LFP_k5_1C_25degC.xlsx", "LFP_k5_20C_25degC.xlsx", "LFP_k5_2C_25degC.xlsx", "LFP_k5_3C_25degC.xlsx", "LFP_k5_5C_25degC.xlsx", "LFP_k6_0_05C_25degC.xlsx", "LFP_k6_10C_25degC.xlsx", "LFP_k6_15C_25degC.xlsx", "LFP_k6_1C_25degC.xlsx", "LFP_k6_20C_25degC.xlsx", "LFP_k6_2C_25degC.xlsx", "LFP_k6_3C_25degC.xlsx", "LFP_k6_5C_25degC.xlsx"],
+    "NMC": ["NMC_k1_0_05C_25degC.xlsx", "NMC_k1_1C_25degC.xlsx", "NMC_k1_2C_25degC.xlsx", "NMC_k1_3C_25degC.xlsx", "NMC_k1_5C_25degC.xlsx", "NMC_k2_0_05C_25degC.xlsx", "NMC_k2_1C_25degC.xlsx", "NMC_k2_2C_25degC.xlsx", "NMC_k2_3C_25degC.xlsx", "NMC_k2_5C_25degC.xlsx", "NMC_k3_0_05C_25degC.xlsx", "NMC_k3_1C_25degC.xlsx", "NMC_k3_2C_25degC.xlsx", "NMC_k3_3C_25degC.xlsx", "NMC_k3_5C_25degC.xlsx", "NMC_k4_0_05C_25degC.xlsx", "NMC_k4_1C_25degC.xlsx", "NMC_k4_2C_25degC.xlsx", "NMC_k4_3C_25degC.xlsx", "NMC_k4_5C_25degC.xlsx", "NMC_k5_0_05C_25degC.xlsx", "NMC_k5_1C_25degC.xlsx", "NMC_k5_2C_25degC.xlsx", "NMC_k5_3C_25degC.xlsx", "NMC_k5_5C_25degC.xlsx", "NMC_k6_0_05C_25degC.xlsx", "NMC_k6_1C_25degC.xlsx", "NMC_k6_2C_25degC.xlsx", "NMC_k6_3C_25degC.xlsx", "NMC_k6_5C_25degC.xlsx"],
+    "NCA": ["NCA_k1_0_05C_25degC.xlsx", "NCA_k1_1C_25degC.xlsx", "NCA_k1_2C_25degC.xlsx", "NCA_k1_3C_25degC.xlsx", "NCA_k1_5C_25degC.xlsx", "NCA_k2_0_05C_25degC.xlsx", "NCA_k2_1C_25degC.xlsx", "NCA_k2_2C_25degC.xlsx", "NCA_k2_3C_25degC.xlsx", "NCA_k2_5C_25degC.xlsx", "NCA_k3_0_05C_25degC.xlsx", "NCA_k3_1C_25degC.xlsx", "NCA_k3_2C_25degC.xlsx", "NCA_k3_3C_25degC.xlsx", "NCA_k3_5C_25degC.xlsx", "NCA_k4_0_05C_25degC.xlsx", "NCA_k4_1C_25degC.xlsx", "NCA_k4_2C_25degC.xlsx", "NCA_k4_3C_25degC.xlsx", "NCA_k4_5C_25degC.xlsx", "NCA_k5_0_05C_25degC.xlsx", "NCA_k5_1C_25degC.xlsx", "NCA_k5_2C_25degC.xlsx", "NCA_k5_3C_25degC.xlsx", "NCA_k5_5C_25degC.xlsx", "NCA_k6_0_05C_25degC.xlsx", "NCA_k6_1C_25degC.xlsx", "NCA_k6_2C_25degC.xlsx", "NCA_k6_3C_25degC.xlsx", "NCA_k6_5C_25degC.xlsx"]
+  },
+  "35deg": {
+    "LFP": ["LFP_k1_0_05C_35degC.xlsx", "LFP_k1_10C_35degC.xlsx", "LFP_k1_15C_35degC.xlsx", "LFP_k1_1C_35degC.xlsx", "LFP_k1_20C_35degC.xlsx", "LFP_k1_2C_35degC.xlsx", "LFP_k1_3C_35degC.xlsx", "LFP_k1_5C_35degC.xlsx", "LFP_k2_0_05C_35degC.xlsx", "LFP_k2_10C_35degC.xlsx", "LFP_k2_15C_35degC.xlsx", "LFP_k2_1C_35degC.xlsx", "LFP_k2_20C_35degC.xlsx", "LFP_k2_2C_35degC.xlsx", "LFP_k2_3C_35degC.xlsx", "LFP_k2_5C_35degC.xlsx", "LFP_k3_0_05C_35degC.xlsx", "LFP_k3_10C_35degC.xlsx", "LFP_k3_15C_35degC.xlsx", "LFP_k3_1C_35degC.xlsx", "LFP_k3_20C_35degC.xlsx", "LFP_k3_2C_35degC.xlsx", "LFP_k3_3C_35degC.xlsx", "LFP_k3_5C_35degC.xlsx", "LFP_k4_0_05C_35degC.xlsx", "LFP_k4_10C_35degC.xlsx", "LFP_k4_15C_35degC.xlsx", "LFP_k4_1C_35degC.xlsx", "LFP_k4_20C_35degC.xlsx", "LFP_k4_2C_35degC.xlsx", "LFP_k4_3C_35degC.xlsx", "LFP_k4_5C_35degC.xlsx", "LFP_k5_0_05C_35degC.xlsx", "LFP_k5_10C_35degC.xlsx", "LFP_k5_15C_35degC.xlsx", "LFP_k5_1C_35degC.xlsx", "LFP_k5_20C_35degC.xlsx", "LFP_k5_2C_35degC.xlsx", "LFP_k5_3C_35degC.xlsx", "LFP_k5_5C_35degC.xlsx", "LFP_k6_0_05C_35degC.xlsx", "LFP_k6_10C_35degC.xlsx", "LFP_k6_15C_35degC.xlsx", "LFP_k6_1C_35degC.xlsx", "LFP_k6_20C_35degC.xlsx", "LFP_k6_2C_35degC.xlsx", "LFP_k6_3C_35degC.xlsx", "LFP_k6_5C_35degC.xlsx"],
+    "NMC": ["NMC_k1_0_05C_35degC.xlsx", "NMC_k1_1C_35degC.xlsx", "NMC_k1_2C_35degC.xlsx", "NMC_k1_3C_35degC.xlsx", "NMC_k1_5C_35degC.xlsx", "NMC_k2_0_05C_35degC.xlsx", "NMC_k2_1C_35degC.xlsx", "NMC_k2_2C_35degC.xlsx", "NMC_k2_3C_35degC.xlsx", "NMC_k2_5C_35degC.xlsx", "NMC_k3_0_05C_35degC.xlsx", "NMC_k3_1C_35degC.xlsx", "NMC_k3_2C_35degC.xlsx", "NMC_k3_3C_35degC.xlsx", "NMC_k3_5C_35degC.xlsx", "NMC_k4_0_05C_35degC.xlsx", "NMC_k4_1C_35degC.xlsx", "NMC_k4_2C_35degC.xlsx", "NMC_k4_3C_35degC.xlsx", "NMC_k4_5C_35degC.xlsx", "NMC_k5_0_05C_35degC.xlsx", "NMC_k5_1C_35degC.xlsx", "NMC_k5_2C_35degC.xlsx", "NMC_k5_3C_35degC.xlsx", "NMC_k5_5C_35degC.xlsx", "NMC_k6_0_05C_35degC.xlsx", "NMC_k6_1C_35degC.xlsx", "NMC_k6_2C_35degC.xlsx", "NMC_k6_3C_35degC.xlsx", "NMC_k6_5C_35degC.xlsx"],
+    "NCA": ["NCA_k1_0_05C_35degC.xlsx", "NCA_k1_1C_35degC.xlsx", "NCA_k1_2C_35degC.xlsx", "NCA_k1_3C_35degC.xlsx", "NCA_k1_5C_35degC.xlsx", "NCA_k2_0_05C_35degC.xlsx", "NCA_k2_1C_35degC.xlsx", "NCA_k2_2C_35degC.xlsx", "NCA_k2_3C_35degC.xlsx", "NCA_k2_5C_35degC.xlsx", "NCA_k3_0_05C_35degC.xlsx", "NCA_k3_1C_35degC.xlsx", "NCA_k3_2C_35degC.xlsx", "NCA_k3_3C_35degC.xlsx", "NCA_k3_5C_35degC.xlsx", "NCA_k4_0_05C_35degC.xlsx", "NCA_k4_1C_35degC.xlsx", "NCA_k4_2C_35degC.xlsx", "NCA_k4_3C_35degC.xlsx", "NCA_k4_5C_35degC.xlsx", "NCA_k5_0_05C_35degC.xlsx", "NCA_k5_1C_35degC.xlsx", "NCA_k5_2C_35degC.xlsx", "NCA_k5_3C_35degC.xlsx", "NCA_k5_5C_35degC.xlsx", "NCA_k6_0_05C_35degC.xlsx", "NCA_k6_1C_35degC.xlsx", "NCA_k6_2C_35degC.xlsx", "NCA_k6_3C_35degC.xlsx", "NCA_k6_5C_35degC.xlsx"]
+  }
+};
+
     function getDatasetForAmbient(t) {
-      if (t <= 20) return 5;
+      if (t < 15) return 5;
       if (t <= 30) return 25;
       return 35;
+    }
+
+    function showProcessingFiles(tempFolder, selectedChems) {
+      const processLog = document.getElementById("processLog");
+      const files = [];
+
+      selectedChems.forEach(chem => {
+        const chemKey = chem.toUpperCase();
+        if (filesList[tempFolder] && filesList[tempFolder][chemKey]) {
+          files.push(...filesList[tempFolder][chemKey]);
+        }
+      });
+
+      let index = 0;
+      function showNext() {
+        if (index < files.length) {
+          processLog.textContent = `Processing: ${files[index]}`;
+          index++;
+          setTimeout(showNext, 500);
+        } else {
+          processLog.textContent = "All files processed.";
+        }
+      }
+      showNext();
     }
 
     document.getElementById('compute').addEventListener('click', () => {
@@ -171,6 +221,7 @@
       }
 
       const dataset = getDatasetForAmbient(ambient);
+      const tempFolder = dataset + "deg";
 
       // Filter passing chemistries
       const passing = selected
@@ -182,6 +233,7 @@
         document.getElementById('recommendation').textContent = "No chemistry meets the condition.";
         document.getElementById('recommendation').style.background = "#ccc";
         document.getElementById('extra').textContent = "";
+        document.getElementById('processLog').textContent = "";
         return;
       }
 
@@ -201,6 +253,9 @@
       document.getElementById('recommendation').style.background = bgColor;
       document.getElementById('recommendation').style.color = "white";
       document.getElementById('extra').textContent = comments[best.chem];
+
+      // Show processing files for all selected chemistries
+      showProcessingFiles(tempFolder, selected);
     });
   </script>
 </body>
