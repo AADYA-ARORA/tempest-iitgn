@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>TEMPEST</title>
+<title>Battery Chemistry Selector</title>
 <style>
     body {
         margin: 0;
@@ -91,7 +91,7 @@
 <body>
 
 <div class="container">
-    <h1>TEMPEST: Battery Chemistry Selector</h1>
+    <h1>Battery Chemistry Selector</h1>
     <p>Enter ambient temperature and select battery chemistries to compare.</p>
     
     <label for="temp">Ambient Temperature (°C):</label><br>
@@ -174,17 +174,18 @@ async function startProcessing() {
     const validBatteries = selectedBatteries.filter(bat => temp < avgTemps[dataset][bat]);
     logsDiv.innerHTML = "Processing complete.";
     
+    let finalMessage = "";
     if (validBatteries.length === 0) {
-        resultDiv.innerHTML = "No battery meets the criteria.";
-        return;
+        finalMessage = "No battery meets the criteria.";
+    } else {
+        const bestBattery = validBatteries.reduce((best, current) => {
+            return avgTemps[dataset][current] < avgTemps[dataset][best] ? current : best;
+        });
+        finalMessage = `✅ Optimal Battery is: ${bestBattery}`;
     }
-    
-    const bestBattery = validBatteries.reduce((best, current) => {
-        return avgTemps[dataset][current] < avgTemps[dataset][best] ? current : best;
-    });
 
-    // Final output always displayed
-    resultDiv.innerHTML = `✅ Optimal Battery is: ${bestBattery}`;
+    // Always display the result at the very end
+    resultDiv.innerHTML = finalMessage;
 }
 </script>
 
