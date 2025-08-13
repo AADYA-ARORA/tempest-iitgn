@@ -179,19 +179,16 @@ async function startProcessing() {
         }
     }
 
-    // Determine best battery
-    const validBatteries = selectedBatteries.filter(bat =>
-        avgTemps[dataset][bat] !== undefined && temp < avgTemps[dataset][bat]
-    );
-
+    // Determine best battery from selected (lowest avgTemp wins)
     let bestBattery;
-    if (validBatteries.length > 0) {
-        bestBattery = validBatteries.reduce((best, current) =>
+    if (selectedBatteries.length > 0) {
+        bestBattery = selectedBatteries.reduce((best, current) =>
             avgTemps[dataset][current] < avgTemps[dataset][best] ? current : best
         );
     } else {
         bestBattery = "None";
     }
+
 
     // Always show final output
     logsDiv.innerHTML = "Processing complete.";
