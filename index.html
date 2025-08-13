@@ -1,193 +1,207 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>TEMPEST — Optimal Battery Finder</title>
-<script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
-<style>
-  body {
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    margin: 0;
-    background-color: #f5f7fa;
-  }
-  header {
-    background-color: #1e3a8a;
-    color: white;
-    padding: 1rem 2rem;
-    text-align: center;
-    font-size: 1.8rem;
-    font-weight: bold;
-    letter-spacing: 1px;
-    border-radius: 0 0 10px 10px;
-  }
-  main {
-    max-width: 900px;
-    margin: 2rem auto;
-    background: white;
-    padding: 2rem;
-    border-radius: 10px;
-    box-shadow: 0px 4px 20px rgba(0,0,0,0.1);
-  }
-  .section-heading {
-    background-color: #1e3a8a;
-    color: white;
-    padding: 0.7rem 1rem;
-    font-size: 1.2rem;
-    font-weight: bold;
-    border-radius: 6px;
-    margin-top: 1.5rem;
-    margin-bottom: 0.8rem;
-  }
-  input[type="number"] {
-    width: 100%;
-    padding: 0.6rem;
-    margin-top: 0.5rem;
-    border: 1px solid #ccc;
-    border-radius: 5px;
-    font-size: 1rem;
-  }
-  .checkbox-group {
-    display: flex;
-    gap: 1rem;
-    margin-top: 0.5rem;
-    flex-wrap: wrap;
-  }
-  .checkbox-group label {
-    font-weight: normal;
-  }
-  button {
-    padding: 0.8rem 1.5rem;
-    border: none;
-    border-radius: 8px;
-    cursor: pointer;
-    margin-top: 1.5rem;
-    font-size: 1rem;
-    color: white;
-    background-color: #2563eb;
-    transition: background-color 0.2s ease-in-out;
-  }
-  button:hover {
-    background-color: #1d4ed8;
-  }
-  #result {
-    margin-top: 1.5rem;
-    padding: 1rem;
-    border-radius: 8px;
-    font-size: 1.2rem;
-    font-weight: bold;
-    text-align: center;
-    color: white;
-    background-color: #22c55e;
-  }
-  #log {
-    font-size: 0.9rem;
-    margin-top: 1rem;
-    color: white;
-    background-color: #1e3a8a;
-    padding: 0.8rem;
-    border-radius: 8px;
-    text-align: center;
-    font-weight: bold;
-  }
-</style>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Battery Chemistry Selector</title>
+  <style>
+    :root {
+      --lfp: #4CAF50;  /* green */
+      --nca: #2196F3;  /* blue */
+      --nmc: #FF9800;  /* orange */
+      --bg: #f4f7fb;
+      --card: #ffffff;
+    }
+    * { box-sizing: border-box; }
+    body {
+      font-family: 'Segoe UI', Roboto, Arial, sans-serif;
+      margin: 0;
+      background: var(--bg);
+      color: #222;
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+    }
+    header {
+      text-align: center;
+      padding: 30px 20px 10px;
+      background: linear-gradient(90deg, #0066cc, #00b3b3);
+      color: white;
+    }
+    header h1 {
+      margin: 0;
+      font-size: 2.2rem;
+      font-weight: 700;
+    }
+    header p {
+      margin: 8px 0 0;
+      font-size: 1.1rem;
+      opacity: 0.9;
+    }
+    main {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .card {
+      background: var(--card);
+      border-radius: 16px;
+      padding: 30px;
+      width: 100%;
+      max-width: 500px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.1);
+    }
+    label {
+      font-weight: 600;
+      display: block;
+      margin-bottom: 6px;
+    }
+    input[type="number"] {
+      width: 100%;
+      padding: 10px;
+      font-size: 1rem;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      margin-bottom: 20px;
+    }
+    .checkbox-group {
+      display: flex;
+      gap: 20px;
+      margin-bottom: 20px;
+    }
+    .checkbox-group label {
+      font-weight: 500;
+    }
+    .btn {
+      background: #0066cc;
+      color: white;
+      border: none;
+      padding: 12px 20px;
+      font-size: 1.1rem;
+      border-radius: 8px;
+      cursor: pointer;
+      width: 100%;
+      transition: background 0.2s;
+    }
+    .btn:hover {
+      background: #004d99;
+    }
+    .result {
+      margin-top: 25px;
+      padding: 20px;
+      border-radius: 12px;
+      text-align: center;
+      font-size: 1.4rem;
+      font-weight: 700;
+    }
+    .comment {
+      margin-top: 15px;
+      font-size: 1.05rem;
+      font-weight: 400;
+      text-align: center;
+      color: #444;
+    }
+  </style>
 </head>
 <body>
-<header>
-  🚀 TEMPEST — Optimal Battery Finder
-</header>
-<main>
-  <div class="section-heading">🌡 Ambient Temperature (°C)</div>
-  <input type="number" id="ambientTemp" placeholder="Enter ambient temperature" />
+  <header>
+    <h1>Battery Chemistry Selector</h1>
+    <p>Enter ambient temperature, select chemistries, and get the best choice instantly</p>
+  </header>
+  <main>
+    <div class="card">
+      <label for="ambient">Ambient temperature (°C)</label>
+      <input id="ambient" type="number" step="0.1" placeholder="e.g. 22" />
 
-  <div class="section-heading">🔋 Battery Chemistries</div>
-  <div class="checkbox-group">
-    <label><input type="checkbox" value="LFP" /> LFP</label>
-    <label><input type="checkbox" value="NMC" /> NMC</label>
-    <label><input type="checkbox" value="NCA" /> NCA</label>
-  </div>
+      <label>Select chemistries to consider</label>
+      <div class="checkbox-group">
+        <label><input type="checkbox" id="ch_lfp" checked /> LFP</label>
+        <label><input type="checkbox" id="ch_nca" checked /> NCA</label>
+        <label><input type="checkbox" id="ch_nmc" checked /> NMC</label>
+      </div>
 
-  <button onclick="runAnalysis()">Run Analysis</button>
-  <button onclick="resetForm()" style="background-color:#6b7280; margin-left: 1rem;">Reset</button>
+      <button class="btn" id="compute">Compute Recommendation</button>
 
-  <div id="result" style="display:none;"></div>
-  <div id="log" style="display:none;"></div>
-</main>
+      <div id="out" style="display:none">
+        <div id="recommendation" class="result"></div>
+        <div id="extra" class="comment"></div>
+      </div>
+    </div>
+  </main>
 
-<script>
-const filesList = {
-  "5deg": {
-    "LFP": ["LFP_k1_0_05C_05degC.xlsx", "LFP_k1_10C_05degC.xlsx", "LFP_k1_15C_05degC.xlsx", "LFP_k1_1C_05degC.xlsx", "LFP_k1_20C_05degC.xlsx", "LFP_k1_2C_05degC.xlsx", "LFP_k1_3C_05degC.xlsx", "LFP_k1_5C_05degC.xlsx", "LFP_k2_0_05C_05degC.xlsx", "LFP_k2_10C_05degC.xlsx", "LFP_k2_15C_05degC.xlsx", "LFP_k2_1C_05degC.xlsx", "LFP_k2_20C_05degC.xlsx", "LFP_k2_2C_05degC.xlsx", "LFP_k2_3C_05degC.xlsx", "LFP_k2_5C_05degC.xlsx", "LFP_k3_0_05C_05degC.xlsx", "LFP_k3_10C_05degC.xlsx", "LFP_k3_15C_05degC.xlsx", "LFP_k3_1C_05degC.xlsx", "LFP_k3_20C_05degC.xlsx", "LFP_k3_2C_05degC.xlsx", "LFP_k3_3C_05degC.xlsx", "LFP_k3_5C_05degC.xlsx", "LFP_k4_0_05C_05degC.xlsx", "LFP_k4_10C_05degC.xlsx", "LFP_k4_15C_05degC.xlsx", "LFP_k4_1C_05degC.xlsx", "LFP_k4_20C_05degC.xlsx", "LFP_k4_2C_05degC.xlsx", "LFP_k4_3C_05degC.xlsx", "LFP_k4_5C_05degC.xlsx", "LFP_k5_0_05C_05degC.xlsx", "LFP_k5_10C_05degC.xlsx", "LFP_k5_15C_05degC.xlsx", "LFP_k5_1C_05degC.xlsx", "LFP_k5_20C_05degC.xlsx", "LFP_k5_2C_05degC.xlsx", "LFP_k5_3C_05degC.xlsx", "LFP_k5_5C_05degC.xlsx", "LFP_k6_0_05C_05degC.xlsx", "LFP_k6_10C_05degC.xlsx", "LFP_k6_15C_05degC.xlsx", "LFP_k6_1C_05degC.xlsx", "LFP_k6_20C_05degC.xlsx", "LFP_k6_2C_05degC.xlsx", "LFP_k6_3C_05degC.xlsx", "LFP_k6_5C_05degC.xlsx"],
-    "NMC": ["NMC_k1_0_05C_05degC.xlsx", "NMC_k1_1C_05degC.xlsx", "NMC_k1_2C_05degC.xlsx", "NMC_k1_3C_05degC.xlsx", "NMC_k1_5C_05degC.xlsx", "NMC_k2_0_05C_05degC.xlsx", "NMC_k2_1C_05degC.xlsx", "NMC_k2_2C_05degC.xlsx", "NMC_k2_3C_05degC.xlsx", "NMC_k2_5C_05degC.xlsx", "NMC_k3_0_05C_05degC.xlsx", "NMC_k3_1C_05degC.xlsx", "NMC_k3_2C_05degC.xlsx", "NMC_k3_3C_05degC.xlsx", "NMC_k3_5C_05degC.xlsx", "NMC_k4_0_05C_05degC.xlsx", "NMC_k4_1C_05degC.xlsx", "NMC_k4_2C_05degC.xlsx", "NMC_k4_3C_05degC.xlsx", "NMC_k4_5C_05degC.xlsx", "NMC_k5_0_05C_05degC.xlsx", "NMC_k5_1C_05degC.xlsx", "NMC_k5_2C_05degC.xlsx", "NMC_k5_3C_05degC.xlsx", "NMC_k5_5C_05degC.xlsx", "NMC_k6_0_05C_05degC.xlsx", "NMC_k6_1C_05degC.xlsx", "NMC_k6_2C_05degC.xlsx", "NMC_k6_3C_05degC.xlsx", "NMC_k6_5C_05degC.xlsx"],
-    "NCA": ["NCA_k1_0_05C_05degC.xlsx", "NCA_k1_1C_05degC.xlsx", "NCA_k1_2C_05degC.xlsx", "NCA_k1_3C_05degC.xlsx", "NCA_k1_5C_05degC.xlsx", "NCA_k2_0_05C_05degC.xlsx", "NCA_k2_1C_05degC.xlsx", "NCA_k2_2C_05degC.xlsx", "NCA_k2_3C_05degC.xlsx", "NCA_k2_5C_05degC.xlsx", "NCA_k3_0_05C_05degC.xlsx", "NCA_k3_1C_05degC.xlsx", "NCA_k3_2C_05degC.xlsx", "NCA_k3_3C_05degC.xlsx", "NCA_k3_5C_05degC.xlsx", "NCA_k4_0_05C_05degC.xlsx", "NCA_k4_1C_05degC.xlsx", "NCA_k4_2C_05degC.xlsx", "NCA_k4_3C_05degC.xlsx", "NCA_k4_5C_05degC.xlsx", "NCA_k5_0_05C_05degC.xlsx", "NCA_k5_1C_05degC.xlsx", "NCA_k5_2C_05degC.xlsx", "NCA_k5_3C_05degC.xlsx", "NCA_k5_5C_05degC.xlsx", "NCA_k6_0_05C_05degC.xlsx", "NCA_k6_1C_05degC.xlsx", "NCA_k6_2C_05degC.xlsx", "NCA_k6_3C_05degC.xlsx", "NCA_k6_5C_05degC.xlsx"]
-  },
-  "25deg": {
-    "LFP": ["LFP_k1_0_05C_25degC.xlsx", "LFP_k1_10C_25degC.xlsx", "LFP_k1_15C_25degC.xlsx", "LFP_k1_1C_25degC.xlsx", "LFP_k1_20C_25degC.xlsx", "LFP_k1_2C_25degC.xlsx", "LFP_k1_3C_25degC.xlsx", "LFP_k1_5C_25degC.xlsx", "LFP_k2_0_05C_25degC.xlsx", "LFP_k2_10C_25degC.xlsx", "LFP_k2_15C_25degC.xlsx", "LFP_k2_1C_25degC.xlsx", "LFP_k2_20C_25degC.xlsx", "LFP_k2_2C_25degC.xlsx", "LFP_k2_3C_25degC.xlsx", "LFP_k2_5C_25degC.xlsx", "LFP_k3_0_05C_25degC.xlsx", "LFP_k3_10C_25degC.xlsx", "LFP_k3_15C_25degC.xlsx", "LFP_k3_1C_25degC.xlsx", "LFP_k3_20C_25degC.xlsx", "LFP_k3_2C_25degC.xlsx", "LFP_k3_3C_25degC.xlsx", "LFP_k3_5C_25degC.xlsx", "LFP_k4_0_05C_25degC.xlsx", "LFP_k4_10C_25degC.xlsx", "LFP_k4_15C_25degC.xlsx", "LFP_k4_1C_25degC.xlsx", "LFP_k4_20C_25degC.xlsx", "LFP_k4_2C_25degC.xlsx", "LFP_k4_3C_25degC.xlsx", "LFP_k4_5C_25degC.xlsx", "LFP_k5_0_05C_25degC.xlsx", "LFP_k5_10C_25degC.xlsx", "LFP_k5_15C_25degC.xlsx", "LFP_k5_1C_25degC.xlsx", "LFP_k5_20C_25degC.xlsx", "LFP_k5_2C_25degC.xlsx", "LFP_k5_3C_25degC.xlsx", "LFP_k5_5C_25degC.xlsx", "LFP_k6_0_05C_25degC.xlsx", "LFP_k6_10C_25degC.xlsx", "LFP_k6_15C_25degC.xlsx", "LFP_k6_1C_25degC.xlsx", "LFP_k6_20C_25degC.xlsx", "LFP_k6_2C_25degC.xlsx", "LFP_k6_3C_25degC.xlsx", "LFP_k6_5C_25degC.xlsx"],
-    "NMC": ["NMC_k1_0_05C_25degC.xlsx", "NMC_k1_1C_25degC.xlsx", "NMC_k1_2C_25degC.xlsx", "NMC_k1_3C_25degC.xlsx", "NMC_k1_5C_25degC.xlsx", "NMC_k2_0_05C_25degC.xlsx", "NMC_k2_1C_25degC.xlsx", "NMC_k2_2C_25degC.xlsx", "NMC_k2_3C_25degC.xlsx", "NMC_k2_5C_25degC.xlsx", "NMC_k3_0_05C_25degC.xlsx", "NMC_k3_1C_25degC.xlsx", "NMC_k3_2C_25degC.xlsx", "NMC_k3_3C_25degC.xlsx", "NMC_k3_5C_25degC.xlsx", "NMC_k4_0_05C_25degC.xlsx", "NMC_k4_1C_25degC.xlsx", "NMC_k4_2C_25degC.xlsx", "NMC_k4_3C_25degC.xlsx", "NMC_k4_5C_25degC.xlsx", "NMC_k5_0_05C_25degC.xlsx", "NMC_k5_1C_25degC.xlsx", "NMC_k5_2C_25degC.xlsx", "NMC_k5_3C_25degC.xlsx", "NMC_k5_5C_25degC.xlsx", "NMC_k6_0_05C_25degC.xlsx", "NMC_k6_1C_25degC.xlsx", "NMC_k6_2C_25degC.xlsx", "NMC_k6_3C_25degC.xlsx", "NMC_k6_5C_25degC.xlsx"],
-    "NCA": ["NCA_k1_0_05C_25degC.xlsx", "NCA_k1_1C_25degC.xlsx", "NCA_k1_2C_25degC.xlsx", "NCA_k1_3C_25degC.xlsx", "NCA_k1_5C_25degC.xlsx", "NCA_k2_0_05C_25degC.xlsx", "NCA_k2_1C_25degC.xlsx", "NCA_k2_2C_25degC.xlsx", "NCA_k2_3C_25degC.xlsx", "NCA_k2_5C_25degC.xlsx", "NCA_k3_0_05C_25degC.xlsx", "NCA_k3_1C_25degC.xlsx", "NCA_k3_2C_25degC.xlsx", "NCA_k3_3C_25degC.xlsx", "NCA_k3_5C_25degC.xlsx", "NCA_k4_0_05C_25degC.xlsx", "NCA_k4_1C_25degC.xlsx", "NCA_k4_2C_25degC.xlsx", "NCA_k4_3C_25degC.xlsx", "NCA_k4_5C_25degC.xlsx", "NCA_k5_0_05C_25degC.xlsx", "NCA_k5_1C_25degC.xlsx", "NCA_k5_2C_25degC.xlsx", "NCA_k5_3C_25degC.xlsx", "NCA_k5_5C_25degC.xlsx", "NCA_k6_0_05C_25degC.xlsx", "NCA_k6_1C_25degC.xlsx", "NCA_k6_2C_25degC.xlsx", "NCA_k6_3C_25degC.xlsx", "NCA_k6_5C_25degC.xlsx"]
-  },
-  "35deg": {
-    "LFP": ["LFP_k1_0_05C_35degC.xlsx", "LFP_k1_10C_35degC.xlsx", "LFP_k1_15C_35degC.xlsx", "LFP_k1_1C_35degC.xlsx", "LFP_k1_20C_35degC.xlsx", "LFP_k1_2C_35degC.xlsx", "LFP_k1_3C_35degC.xlsx", "LFP_k1_5C_35degC.xlsx", "LFP_k2_0_05C_35degC.xlsx", "LFP_k2_10C_35degC.xlsx", "LFP_k2_15C_35degC.xlsx", "LFP_k2_1C_35degC.xlsx", "LFP_k2_20C_35degC.xlsx", "LFP_k2_2C_35degC.xlsx", "LFP_k2_3C_35degC.xlsx", "LFP_k2_5C_35degC.xlsx", "LFP_k3_0_05C_35degC.xlsx", "LFP_k3_10C_35degC.xlsx", "LFP_k3_15C_35degC.xlsx", "LFP_k3_1C_35degC.xlsx", "LFP_k3_20C_35degC.xlsx", "LFP_k3_2C_35degC.xlsx", "LFP_k3_3C_35degC.xlsx", "LFP_k3_5C_35degC.xlsx", "LFP_k4_0_05C_35degC.xlsx", "LFP_k4_10C_35degC.xlsx", "LFP_k4_15C_35degC.xlsx", "LFP_k4_1C_35degC.xlsx", "LFP_k4_20C_35degC.xlsx", "LFP_k4_2C_35degC.xlsx", "LFP_k4_3C_35degC.xlsx", "LFP_k4_5C_35degC.xlsx", "LFP_k5_0_05C_35degC.xlsx", "LFP_k5_10C_35degC.xlsx", "LFP_k5_15C_35degC.xlsx", "LFP_k5_1C_35degC.xlsx", "LFP_k5_20C_35degC.xlsx", "LFP_k5_2C_35degC.xlsx", "LFP_k5_3C_35degC.xlsx", "LFP_k5_5C_35degC.xlsx", "LFP_k6_0_05C_35degC.xlsx", "LFP_k6_10C_35degC.xlsx", "LFP_k6_15C_35degC.xlsx", "LFP_k6_1C_35degC.xlsx", "LFP_k6_20C_35degC.xlsx", "LFP_k6_2C_35degC.xlsx", "LFP_k6_3C_35degC.xlsx", "LFP_k6_5C_35degC.xlsx"],
-    "NMC": ["NMC_k1_0_05C_35degC.xlsx", "NMC_k1_1C_35degC.xlsx", "NMC_k1_2C_35degC.xlsx", "NMC_k1_3C_35degC.xlsx", "NMC_k1_5C_35degC.xlsx", "NMC_k2_0_05C_35degC.xlsx", "NMC_k2_1C_35degC.xlsx", "NMC_k2_2C_35degC.xlsx", "NMC_k2_3C_35degC.xlsx", "NMC_k2_5C_35degC.xlsx", "NMC_k3_0_05C_35degC.xlsx", "NMC_k3_1C_35degC.xlsx", "NMC_k3_2C_35degC.xlsx", "NMC_k3_3C_35degC.xlsx", "NMC_k3_5C_35degC.xlsx", "NMC_k4_0_05C_35degC.xlsx", "NMC_k4_1C_35degC.xlsx", "NMC_k4_2C_35degC.xlsx", "NMC_k4_3C_35degC.xlsx", "NMC_k4_5C_35degC.xlsx", "NMC_k5_0_05C_35degC.xlsx", "NMC_k5_1C_35degC.xlsx", "NMC_k5_2C_35degC.xlsx", "NMC_k5_3C_35degC.xlsx", "NMC_k5_5C_35degC.xlsx", "NMC_k6_0_05C_35degC.xlsx", "NMC_k6_1C_35degC.xlsx", "NMC_k6_2C_35degC.xlsx", "NMC_k6_3C_35degC.xlsx", "NMC_k6_5C_35degC.xlsx"],
-    "NCA": ["NCA_k1_0_05C_35degC.xlsx", "NCA_k1_1C_35degC.xlsx", "NCA_k1_2C_35degC.xlsx", "NCA_k1_3C_35degC.xlsx", "NCA_k1_5C_35degC.xlsx", "NCA_k2_0_05C_35degC.xlsx", "NCA_k2_1C_35degC.xlsx", "NCA_k2_2C_35degC.xlsx", "NCA_k2_3C_35degC.xlsx", "NCA_k2_5C_35degC.xlsx", "NCA_k3_0_05C_35degC.xlsx", "NCA_k3_1C_35degC.xlsx", "NCA_k3_2C_35degC.xlsx", "NCA_k3_3C_35degC.xlsx", "NCA_k3_5C_35degC.xlsx", "NCA_k4_0_05C_35degC.xlsx", "NCA_k4_1C_35degC.xlsx", "NCA_k4_2C_35degC.xlsx", "NCA_k4_3C_35degC.xlsx", "NCA_k4_5C_35degC.xlsx", "NCA_k5_0_05C_35degC.xlsx", "NCA_k5_1C_35degC.xlsx", "NCA_k5_2C_35degC.xlsx", "NCA_k5_3C_35degC.xlsx", "NCA_k5_5C_35degC.xlsx", "NCA_k6_0_05C_35degC.xlsx", "NCA_k6_1C_35degC.xlsx", "NCA_k6_2C_35degC.xlsx", "NCA_k6_3C_35degC.xlsx", "NCA_k6_5C_35degC.xlsx"]
-  }
-};
+  <script>
+    // ====== Fixed Average Temperatures ======
+    // Edit these values if needed
+    const avgTemps = {
+      5:  { lfp: 7, nca: 6, nmc: 5 },
+      25: { lfp: 25, nca: 26, nmc: 27 },
+      35: { lfp: 35, nca: 37, nmc: 36 }
+    };
 
-function getFolderByTemp(temp) {
-  if (temp < 20) return "5deg";
-  if (temp <= 30) return "25deg";
-  return "35deg";
-}
+    // ====== Additional Comments ======
+    const comments = {
+      lfp: "LFP – Performs reliably and safely in warm to hot climates, with minimal heat-related degradation.",
+      nca: "NMC – Strong in cool to moderate temperatures, but degrades faster in sustained heat.",
+      nmc: "NCA – Works well in cool to mild temperatures, but requires tight thermal control in warmth."
+    };
 
-async function runAnalysis() {
-  const ambientTemp = parseFloat(document.getElementById("ambientTemp").value);
-  const selectedChems = Array.from(document.querySelectorAll('.checkbox-group input:checked')).map(cb => cb.value);
-  const folder = getFolderByTemp(ambientTemp);
-  const logEl = document.getElementById("log");
-  logEl.style.display = "block";
-  logEl.textContent = "";
-
-  if (!ambientTemp || selectedChems.length === 0) {
-    alert("Please enter ambient temperature and select at least one chemistry.");
-    return;
-  }
-
-  let results = {};
-  for (let chem of selectedChems) {
-    let fileTimes = [];
-    let files = filesList[folder][chem];
-    let fileCount = files.length;
-    for (let i=0; i<fileCount; i++) {
-      logEl.textContent = `Processing ${chem}: file ${i+1}/${fileCount} — ${files[i]}`;
-      let response = await fetch(`data/${folder}/${chem}/${files[i]}`);
-      let arrayBuffer = await response.arrayBuffer();
-      let workbook = XLSX.read(arrayBuffer, { type: "array" });
-      let sheet = workbook.Sheets[workbook.SheetNames[0]];
-      let json = XLSX.utils.sheet_to_json(sheet);
-      let totalAbove = 0;
-      for (let row of json) {
-        if (row["Surface_Temp(degC)"] > ambientTemp) {
-          totalAbove += (row["Test_Time(s)"] - row["Step_Time(s)"]);
-        }
-      }
-      fileTimes.push(totalAbove);
+    function getDatasetForAmbient(t) {
+      if (t <= 20) return 5;
+      if (t <= 30) return 25;
+      return 35;
     }
-    results[chem] = fileTimes.reduce((a,b)=>a+b,0) / fileTimes.length;
-  }
 
-  let optimal = Object.entries(results).sort((a,b)=>a[1]-b[1])[0][0];
-  const resultEl = document.getElementById("result");
-  resultEl.style.display = "block";
-  resultEl.textContent = `✅ Optimal Battery: ${optimal}`;
-}
+    document.getElementById('compute').addEventListener('click', () => {
+      const ambient = parseFloat(document.getElementById('ambient').value);
+      if (isNaN(ambient)) {
+        alert('Please enter a valid ambient temperature.');
+        return;
+      }
 
-function resetForm() {
-  document.getElementById("ambientTemp").value = "";
-  document.querySelectorAll('.checkbox-group input').forEach(cb => cb.checked = false);
-  document.getElementById("result").style.display = "none";
-  document.getElementById("log").style.display = "none";
-  document.getElementById("log").textContent = "";
-}
-</script>
+      const selected = [];
+      if (document.getElementById('ch_lfp').checked) selected.push('lfp');
+      if (document.getElementById('ch_nca').checked) selected.push('nca');
+      if (document.getElementById('ch_nmc').checked) selected.push('nmc');
+
+      if (selected.length === 0) {
+        alert('Please select at least one chemistry.');
+        return;
+      }
+
+      const dataset = getDatasetForAmbient(ambient);
+
+      // Filter passing chemistries
+      const passing = selected
+        .filter(chem => ambient < avgTemps[dataset][chem])
+        .map(chem => ({ chem, avg: avgTemps[dataset][chem] }));
+
+      if (passing.length === 0) {
+        document.getElementById('out').style.display = 'block';
+        document.getElementById('recommendation').textContent = "No chemistry meets the condition.";
+        document.getElementById('recommendation').style.background = "#ccc";
+        document.getElementById('extra').textContent = "";
+        return;
+      }
+
+      // Find lowest avg among passing
+      const minAvg = Math.min(...passing.map(p => p.avg));
+      const best = passing.find(p => p.avg === minAvg);
+
+      // Style based on chemistry
+      let bgColor;
+      if (best.chem === 'lfp') bgColor = "var(--lfp)";
+      if (best.chem === 'nca') bgColor = "var(--nca)";
+      if (best.chem === 'nmc') bgColor = "var(--nmc)";
+
+      document.getElementById('out').style.display = 'block';
+      document.getElementById('recommendation').textContent =
+        `Recommended: ${best.chem.toUpperCase()} battery`;
+      document.getElementById('recommendation').style.background = bgColor;
+      document.getElementById('recommendation').style.color = "white";
+      document.getElementById('extra').textContent = comments[best.chem];
+    });
+  </script>
 </body>
 </html>
