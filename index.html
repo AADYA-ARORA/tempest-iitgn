@@ -91,7 +91,7 @@
 <body>
 
 <div class="container">
-    <h1>TEMPEST</h1>
+    <h1>TEMPEST: Battery Chemistry Selector</h1>
     <p>Enter ambient temperature and select battery chemistries to compare.</p>
     
     <label for="temp">Ambient Temperature (°C):</label><br>
@@ -172,17 +172,19 @@ async function startProcessing() {
 
     // Determine best battery from selected
     const validBatteries = selectedBatteries.filter(bat => temp < avgTemps[dataset][bat]);
+    logsDiv.innerHTML = "Processing complete.";
+    
     if (validBatteries.length === 0) {
         resultDiv.innerHTML = "No battery meets the criteria.";
-        logsDiv.innerHTML = "Processing complete.";
         return;
     }
+    
     const bestBattery = validBatteries.reduce((best, current) => {
         return avgTemps[dataset][current] < avgTemps[dataset][best] ? current : best;
     });
 
-    logsDiv.innerHTML = "Processing complete.";
-    resultDiv.innerHTML = `Best battery chemistry: ${bestBattery}`;
+    // Final output always displayed
+    resultDiv.innerHTML = `✅ Optimal Battery is: ${bestBattery}`;
 }
 </script>
 
